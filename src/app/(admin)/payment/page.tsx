@@ -900,7 +900,7 @@ export default function PaymentPage() {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center">
                 <Image 
-                  src="https://media.tokize.com/fr/app/uploads/2023/03/Binance-Logo.png" 
+                  src="/images/banks/Binance_Logo.svg.png" 
                   alt="Binance Logo" 
                   width={60} 
                   height={60} 

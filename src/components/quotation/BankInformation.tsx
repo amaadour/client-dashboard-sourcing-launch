@@ -45,7 +45,7 @@ const bankInformation: Record<BankType, BankDetails> = {
   },
   BINANCE: {
     name: "Binance Wallet",
-    logo: "https://media.tokize.com/fr/app/uploads/2023/03/Binance-Logo.png",
+    logo: "/images/banks/Binance_Logo.svg.png",
     accountName: "Binance Wallet",
     accountNumber: "0x236f536f5d68184073057259b1a4da495a28e8a8",
     address: "Network: BNB Smart Chain (BEP20)",
