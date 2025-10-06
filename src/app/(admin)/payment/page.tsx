@@ -852,7 +852,8 @@ export default function PaymentPage() {
               </Button>
             </div>
             <div className="space-y-2 text-sm text-gray-800 dark:text-gray-300">
-              <p><span className="font-medium">Name:</span> Amaadour Ltd</p>
+              <p><span className="font-medium">Beneficiary Name:</span> SOURCING LAUNCH LTD</p>
+              <p><span className="font-medium">Email:</span> mehdi@sourcinglaunch.com</p>
               <p><span className="font-medium">IBAN:</span> BE24 9052 0546 8538</p>
               <p><span className="font-medium">Swift/BIC:</span> TRWIBEB1XXX</p>
               <p><span className="font-medium">Address:</span> Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium</p>
@@ -885,7 +886,8 @@ export default function PaymentPage() {
               </Button>
             </div>
             <div className="space-y-2 text-sm text-gray-800 dark:text-gray-300">
-              <p><span className="font-medium">Beneficiary Name:</span> AMAADOUR LTD</p>
+              <p><span className="font-medium">Beneficiary Name:</span> SOURCING LAUNCH LTD</p>
+              <p><span className="font-medium">Email:</span> mehdi@sourcinglaunch.com</p>
               <p><span className="font-medium">Account Number:</span> 70583160001753419</p>
               <p><span className="font-medium">Account Type:</span> CHECKING</p>
               <p><span className="font-medium">Routing (ABA):</span> 031100209</p>

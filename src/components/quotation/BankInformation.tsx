@@ -26,7 +26,7 @@ const bankInformation: Record<BankType, BankDetails> = {
   WISE: {
     name: "Wise Bank",
     logo: "/images/banks/wise1.svg",
-    accountName: "Amaadour Ltd",
+    accountName: "SOURCING LAUNCH LTD",
     iban: "BE24 9052 0546 8538",
     swift: "TRWIBEB1XXX",
     address: "Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium",
@@ -35,7 +35,7 @@ const bankInformation: Record<BankType, BankDetails> = {
   PAYONEER: {
     name: "Citibank (Payoneer)",
     logo: "/images/banks/payoneer.svg",
-    accountName: "AMAADOUR LTD",
+    accountName: "SOURCING LAUNCH LTD",
     accountNumber: "70583160001753419",
     accountType: "CHECKING",
     routing: "031100209",
