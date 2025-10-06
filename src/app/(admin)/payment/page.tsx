@@ -856,8 +856,8 @@ export default function PaymentPage() {
               <p><span className="font-medium">Email:</span> mehdi@sourcinglaunch.com</p>
               <p><span className="font-medium">IBAN:</span> BE24 9052 0546 8538</p>
               <p><span className="font-medium">Swift/BIC:</span> TRWIBEB1XXX</p>
-              <p><span className="font-medium">Currency:</span> EUR</p>
               <p><span className="font-medium">Address:</span> Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium</p>
+              <p><span className="font-medium">Currency:</span> EUR</p>
             </div>
           </div>
 
