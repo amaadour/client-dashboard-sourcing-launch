@@ -11,6 +11,7 @@ interface BankDetails {
   name: string;
   logo?: string;
   accountName: string;
+  email?: string;
   accountNumber?: string;
   iban?: string;
   swift?: string;
@@ -27,6 +28,7 @@ const bankInformation: Record<BankType, BankDetails> = {
     name: "Wise Bank",
     logo: "/images/banks/wise1.svg",
     accountName: "SOURCING LAUNCH LTD",
+    email: "mehdi@sourcinglaunch.com",
     iban: "BE24 9052 0546 8538",
     swift: "TRWIBEB1XXX",
     address: "Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium",
@@ -36,6 +38,7 @@ const bankInformation: Record<BankType, BankDetails> = {
     name: "Citibank (Payoneer)",
     logo: "/images/banks/payoneer.svg",
     accountName: "SOURCING LAUNCH LTD",
+    email: "mehdi@sourcinglaunch.com",
     accountNumber: "70583160001753419",
     accountType: "CHECKING",
     routing: "031100209",
@@ -59,7 +62,11 @@ const BankInformation: React.FC<BankInformationProps> = ({ bank }) => {
   const handleCopy = (info: BankDetails) => {
     // Create a nicely formatted string with all relevant bank details
     let textToCopy = `${info.name}\n`;
-    textToCopy += `Name: ${info.accountName}\n`;
+    textToCopy += `Beneficiary Name: ${info.accountName}\n`;
+    
+    if (info.email) {
+      textToCopy += `Email: ${info.email}\n`;
+    }
     
     if (info.accountNumber) {
       textToCopy += `Account Number: ${info.accountNumber}\n`;
@@ -82,7 +89,7 @@ const BankInformation: React.FC<BankInformationProps> = ({ bank }) => {
     }
     
     if (info.swift || info.swiftCode) {
-      textToCopy += `Code SWIFT: ${info.swift || info.swiftCode}\n`;
+      textToCopy += `Swift/BIC: ${info.swift || info.swiftCode}\n`;
     }
     
     if (info.address) {
@@ -102,19 +109,19 @@ const BankInformation: React.FC<BankInformationProps> = ({ bank }) => {
   };
 
   return (
-    <div className="p-6 border border-gray-200 rounded-lg bg-white mt-3">
+    <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800/60 mt-3">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           {info.logo ? (
             <Image src={info.logo} alt={info.name} width={24} height={24} />
           ) : (
-            <span className="text-lg font-medium text-blue-600">🏦</span>
+            <span className="text-lg font-medium text-blue-600 dark:text-blue-400">🏦</span>
           )}
-          <h3 className="text-lg font-medium text-gray-900">{info.name}</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{info.name}</h3>
         </div>
         <button 
           onClick={() => handleCopy(info)}
-          className="px-4 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+          className="px-4 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -127,62 +134,69 @@ const BankInformation: React.FC<BankInformationProps> = ({ bank }) => {
       <div className="pr-1">
         <div className="space-y-3">
           <div>
-            <span className="block text-sm font-medium text-gray-700">Name:</span>
-            <span className="block text-sm font-medium text-gray-900 mt-1">{info.accountName}</span>
+            <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Beneficiary Name:</span>
+            <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.accountName}</span>
           </div>
+
+          {info.email && (
+            <div>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Email:</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.email}</span>
+            </div>
+          )}
 
           {info.accountNumber && (
             <div>
-              <span className="block text-sm font-medium text-gray-700">Account Number:</span>
-              <span className="block text-sm font-medium text-gray-900 mt-1">{info.accountNumber}</span>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Account Number:</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.accountNumber}</span>
             </div>
           )}
 
           {info.accountType && (
             <div>
-              <span className="block text-sm font-medium text-gray-700">Account Type:</span>
-              <span className="block text-sm font-medium text-gray-900 mt-1">{info.accountType}</span>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Account Type:</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.accountType}</span>
             </div>
           )}
 
           {info.routing && (
             <div>
-              <span className="block text-sm font-medium text-gray-700">Routing (ABA):</span>
-              <span className="block text-sm font-medium text-gray-900 mt-1">{info.routing}</span>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Routing (ABA):</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.routing}</span>
             </div>
           )}
 
           {info.iban && (
             <div>
-              <span className="block text-sm font-medium text-gray-700">IBAN:</span>
-              <span className="block text-sm font-medium text-gray-900 mt-1">{info.iban}</span>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">IBAN:</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.iban}</span>
             </div>
           )}
 
           {info.ribNumber && (
             <div>
-              <span className="block text-sm font-medium text-gray-700">RIB Number:</span>
-              <span className="block text-sm font-medium text-gray-900 mt-1">{info.ribNumber}</span>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">RIB Number:</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.ribNumber}</span>
             </div>
           )}
 
           {(info.swift || info.swiftCode) && (
             <div>
-              <span className="block text-sm font-medium text-gray-700">Code SWIFT:</span>
-              <span className="block text-sm font-medium text-gray-900 mt-1">{info.swift || info.swiftCode}</span>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Swift/BIC:</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.swift || info.swiftCode}</span>
             </div>
           )}
 
           {info.address && (
             <div>
-              <span className="block text-sm font-medium text-gray-700">Address:</span>
-              <span className="block text-sm font-medium text-gray-900 mt-1">{info.address}</span>
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Address:</span>
+              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.address}</span>
             </div>
           )}
 
           <div>
-            <span className="block text-sm font-medium text-gray-700">Currency:</span>
-            <span className="block text-sm font-medium text-gray-900 mt-1">{info.currency}</span>
+            <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Currency:</span>
+            <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.currency}</span>
           </div>
         </div>
       </div>
