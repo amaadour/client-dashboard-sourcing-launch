@@ -1329,12 +1329,12 @@ export default function PaymentPage() {
                       {/* Selected Pricing Option */}
                       {quotation.selected_option && (() => {
                         const optionNum = quotation.selected_option;
-                        const title = quotation[`title_option${optionNum}`];
-                        const totalPrice = quotation[`total_price_option${optionNum}`];
-                        const unitPrice = quotation[`unit_price_option${optionNum}`];
-                        const deliveryTime = quotation[`delivery_time_option${optionNum}`];
-                        const description = quotation[`description_option${optionNum}`];
-                        const priceDescription = quotation[`price_description_option${optionNum}`];
+                        const title = quotation[`title_option${optionNum}`] as string | undefined;
+                        const totalPrice = quotation[`total_price_option${optionNum}`] as number | undefined;
+                        const unitPrice = quotation[`unit_price_option${optionNum}`] as number | undefined;
+                        const deliveryTime = quotation[`delivery_time_option${optionNum}`] as string | undefined;
+                        const description = quotation[`description_option${optionNum}`] as string | undefined;
+                        const priceDescription = quotation[`price_description_option${optionNum}`] as string | undefined;
                         const quantity = Number(quotation.quantity) || 0;
                         const calculatedTotal = unitPrice ? Number(unitPrice) * quantity : null;
 
