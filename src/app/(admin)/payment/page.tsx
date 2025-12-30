@@ -1335,6 +1335,7 @@ export default function PaymentPage() {
                         const deliveryTime = quotation[`delivery_time_option${optionNum}`] as string | undefined;
                         const description = quotation[`description_option${optionNum}`] as string | undefined;
                         const priceDescription = quotation[`price_description_option${optionNum}`] as string | undefined;
+                        const unitWeight = quotation[`unit_weight_option${optionNum}`] as number | undefined;
                         const quantity = Number(quotation.quantity) || 0;
                         const calculatedTotal = unitPrice ? Number(unitPrice) * quantity : null;
 
@@ -1387,10 +1388,10 @@ export default function PaymentPage() {
                                     <p className="text-base font-medium text-gray-900 dark:text-white">{deliveryTime}</p>
                                   </div>
                                 )}
-                                {quotation[`unit_weight_option${optionNum}`] && (
+                                {unitWeight && (
                                   <div>
                                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Unit Weight</p>
-                                    <p className="text-base font-medium text-gray-900 dark:text-white">{quotation[`unit_weight_option${optionNum}`]}g</p>
+                                    <p className="text-base font-medium text-gray-900 dark:text-white">{unitWeight}g</p>
                                   </div>
                                 )}
                               </div>

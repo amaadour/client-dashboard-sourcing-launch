@@ -710,30 +710,6 @@ export default function ShipmentTrackingPage() {
                   </div>
                 </div>
               </div>
-                    
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Timeline</p>
-                      <div className="space-y-2">
-                        <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Created</p>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{formatDate(selectedShipment.created_at)}</p>
-                        </div>
-                        {selectedShipment.status?.toLowerCase() === "delivered" ? (
-                          <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Delivered</p>
-                            <p className="text-sm font-medium text-green-600 dark:text-green-400">{formatDate(selectedShipment.delivered_at)}</p>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Estimated Delivery</p>
-                            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{formatDate(selectedShipment.estimated_delivery)}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
               
               {/* Location Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -1129,12 +1105,13 @@ export default function ShipmentTrackingPage() {
                       </h4>
                       <div className="space-y-4">
                         {[1, 2, 3].map((optionNum) => {
-                          const title = fullQuotationDetails[`title_option${optionNum}`];
-                          const totalPrice = fullQuotationDetails[`total_price_option${optionNum}`];
-                          const unitPrice = fullQuotationDetails[`unit_price_option${optionNum}`];
-                          const deliveryTime = fullQuotationDetails[`delivery_time_option${optionNum}`];
-                          const description = fullQuotationDetails[`description_option${optionNum}`];
-                          const priceDescription = fullQuotationDetails[`price_description_option${optionNum}`];
+                          const title = fullQuotationDetails[`title_option${optionNum}`] as string | undefined;
+                          const totalPrice = fullQuotationDetails[`total_price_option${optionNum}`] as number | undefined;
+                          const unitPrice = fullQuotationDetails[`unit_price_option${optionNum}`] as number | undefined;
+                          const deliveryTime = fullQuotationDetails[`delivery_time_option${optionNum}`] as string | undefined;
+                          const description = fullQuotationDetails[`description_option${optionNum}`] as string | undefined;
+                          const priceDescription = fullQuotationDetails[`price_description_option${optionNum}`] as string | undefined;
+                          const unitWeight = fullQuotationDetails[`unit_weight_option${optionNum}`] as number | undefined;
                           const isSelected = fullQuotationDetails.selected_option === optionNum;
 
                           if (!title && !totalPrice) return null;
@@ -1175,10 +1152,10 @@ export default function ShipmentTrackingPage() {
                                     <p className="text-base font-medium text-gray-900 dark:text-white">{deliveryTime}</p>
                                   </div>
                                 )}
-                                {fullQuotationDetails[`unit_weight_option${optionNum}`] && (
+                                {unitWeight && (
                                   <div>
                                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Unit Weight</p>
-                                    <p className="text-base font-medium text-gray-900 dark:text-white">{fullQuotationDetails[`unit_weight_option${optionNum}`]}g</p>
+                                    <p className="text-base font-medium text-gray-900 dark:text-white">{unitWeight}g</p>
                                   </div>
                                 )}
                               </div>
