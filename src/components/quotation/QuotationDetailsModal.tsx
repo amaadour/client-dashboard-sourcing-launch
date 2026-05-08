@@ -388,30 +388,30 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
             Price Options
           </h3>
           {quotation.selected_option && (
-            <div className={`mb-4 p-3 rounded-lg ${
+            <div className={`mb-4 flex items-center justify-between rounded-lg px-4 py-3 ${
               selectedOption && selectedOption !== String(quotation.selected_option)
-                ? 'bg-yellow-50 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/10 dark:border-yellow-800 dark:text-yellow-400'
-                : 'bg-green-50 border border-green-200 text-green-800 dark:bg-green-900/10 dark:border-green-800 dark:text-green-400'
+                ? 'bg-[#E3F2FD] border border-[#BBDEFB] dark:bg-blue-900/20 dark:border-blue-800'
+                : 'bg-[#E3F2FD] border border-[#BBDEFB] dark:bg-blue-900/20 dark:border-blue-800'
             }`}>
-              <p className="font-medium">
-                {selectedOption && selectedOption !== String(quotation.selected_option)
-                  ? `Option ${quotation.selected_option} is currently selected. You've chosen Option ${selectedOption} instead.`
-                  : `Option ${quotation.selected_option} is currently selected`
-                }
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0D47A1] dark:bg-blue-400 flex-shrink-0" />
+                <p className="text-sm font-semibold text-[#0D47A1] dark:text-blue-300">
+                  {selectedOption && selectedOption !== String(quotation.selected_option)
+                    ? `Option ${quotation.selected_option} selected — switching to Option ${selectedOption}`
+                    : `Option ${quotation.selected_option} selected`
+                  }
+                </p>
+              </div>
               {selectedOption && selectedOption !== String(quotation.selected_option) && (
-                <div className="mt-2 flex items-center">
-                  <p className="text-sm">Click &quot;Change Selection&quot; below to confirm this change.</p>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSaveSelection}
-                    disabled={isSaving}
-                    className="ml-3 bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-300 text-xs py-1"
-                  >
-                    {isSaving ? 'Saving...' : 'Change Now'}
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveSelection}
+                  disabled={isSaving}
+                  className="border-[#0D47A1] text-[#0D47A1] hover:bg-[#BBDEFB] dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-900/40 text-xs"
+                >
+                  {isSaving ? 'Saving…' : 'Confirm'}
+                </Button>
               )}
             </div>
           )}
@@ -450,19 +450,19 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
                 >
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="w-full">
-                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 mb-3">
+                      <table className="min-w-full border-collapse mb-3 rounded-lg overflow-hidden border border-[#BBDEFB] dark:border-blue-900/40">
                         <thead>
                           <tr>
-                            <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-center bg-gray-50 dark:bg-gray-800">Unit Price</th>
-                            <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-center bg-gray-50 dark:bg-gray-800">Unit Weight (grams)</th>
-                            <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider text-center bg-gray-50 dark:bg-gray-800">Images</th>
+                            <th className="px-4 py-2.5 text-xs font-semibold text-[#0D47A1] uppercase tracking-wide text-center bg-[#E3F2FD] dark:bg-blue-900/20 border border-[#BBDEFB] dark:border-blue-900/40">Unit Price</th>
+                            <th className="px-4 py-2.5 text-xs font-semibold text-[#0D47A1] uppercase tracking-wide text-center bg-[#E3F2FD] dark:bg-blue-900/20 border border-[#BBDEFB] dark:border-blue-900/40">Unit Weight (g)</th>
+                            <th className="px-4 py-2.5 text-xs font-semibold text-[#0D47A1] uppercase tracking-wide text-center bg-[#E3F2FD] dark:bg-blue-900/20 border border-[#BBDEFB] dark:border-blue-900/40">Images</th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr>
-                            <td className="px-4 py-2 text-sm text-center border font-bold text-gray-900 dark:text-white">${unitPrice}</td>
-                            <td className="px-4 py-2 text-sm text-center border text-gray-900 dark:text-white">{unitWeight}</td>
-                            <td className="px-4 py-2 text-sm text-center border">
+                            <td className="px-4 py-2.5 text-sm text-center border border-[#BBDEFB] dark:border-blue-900/40 font-bold text-[#0D47A1] dark:text-blue-300">${unitPrice}</td>
+                            <td className="px-4 py-2.5 text-sm text-center border border-[#BBDEFB] dark:border-blue-900/40 text-gray-800 dark:text-white">{unitWeight}</td>
+                            <td className="px-4 py-2.5 text-sm text-center border border-[#BBDEFB] dark:border-blue-900/40">
                               <div className="flex flex-wrap gap-2 justify-center">
                                 {imageFields.length > 0 ? (
                                   imageFields.map((img, idx) => (
@@ -596,7 +596,7 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
     >
       <div className="flex flex-col h-full max-h-[85vh]">
         {/* Fixed Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-4 border-b border-[#BBDEFB] dark:border-blue-900/40 flex-shrink-0 bg-[#E3F2FD] dark:bg-blue-900/20">
           <div className="flex-1">
             <h2 className="text-xl font-bold text-[#0D47A1] dark:text-blue-400 flex items-center">
               Quotation Details <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">ID: {quotation.quotation_id || quotation.id}</span>
@@ -641,40 +641,33 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 min-h-0">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 min-h-0 space-y-5">
+
         {/* Product Information */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Product Information
-          </h3>
-          <div className="flex flex-col md:flex-row gap-6">
+        <div className="rounded-xl border border-[#BBDEFB] dark:border-blue-900/40 overflow-hidden">
+          <div className="px-4 py-3 bg-[#E3F2FD] dark:bg-blue-900/20 border-b border-[#BBDEFB] dark:border-blue-900/40">
+            <h3 className="text-sm font-semibold text-[#0D47A1] dark:text-blue-300 uppercase tracking-wide">Product Information</h3>
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-800">
+          <div className="flex flex-col md:flex-row gap-5">
             <div className="w-full md:w-1/3">
-              <div 
-                className="relative w-full h-56 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer group"
+              <div
+                className="relative w-full h-52 rounded-lg overflow-hidden border border-[#BBDEFB] dark:border-blue-900/40 cursor-pointer group"
                 onClick={() => handleMediaClick(quotation.product.image)}
               >
                 {isVideoUrl(quotation.product.image) ? (
                   <>
                     <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-                      <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
+                      <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-sm px-3 py-2 text-center font-medium">
-                      Click to preview video
-                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-3 py-2 text-center">Click to preview video</div>
                   </>
                 ) : (
                   <>
-                    <Image
-                      src={validateImageUrl(quotation.product.image)}
-                      alt={quotation.product.name}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={validateImageUrl(quotation.product.image)} alt={quotation.product.name} fill className="object-cover"/>
                     {isPlaceholderImage(quotation.product.image) && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-90">
-                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">No image uploaded</p>
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#E3F2FD] dark:bg-blue-900/20">
+                        <p className="text-[#0D47A1]/60 text-sm font-medium">No image uploaded</p>
                       </div>
                     )}
                   </>
@@ -683,205 +676,149 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
               </div>
             </div>
             <div className="w-full md:w-2/3">
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Product Name</span>
-                  <h4 className="text-lg font-medium text-gray-800 dark:text-white">
-                    {quotation.product.name}
-                  </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2 pb-2 border-b border-[#E3F2FD] dark:border-blue-900/30">
+                  <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Product Name</span>
+                  <h4 className="text-base font-semibold text-[#0D47A1] dark:text-blue-200 mt-0.5">{quotation.product.name}</h4>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Quantity</span>
-                  <p className="text-gray-800 dark:text-gray-200">
-                    {quotation.quantity}
-                  </p>
+                  <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Quantity</span>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{quotation.quantity}</p>
                 </div>
                 {quotation.status === "Approved" && quotation.product.unitGrossWeight && (
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Unit Gross Weight</span>
-                    <p className="text-gray-800 dark:text-gray-200">
-                      {quotation.product.unitGrossWeight}
-                    </p>
+                    <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Unit Weight</span>
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{quotation.product.unitGrossWeight}</p>
                   </div>
                 )}
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Shipping Method</span>
-                  <p className="text-gray-800 dark:text-gray-200">
-                    {quotation.shippingMethod}
-                  </p>
+                  <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Shipping</span>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{quotation.shippingMethod}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Destination</span>
-                  <p className="text-gray-800 dark:text-gray-200">
-                    {quotation.destination}
-                  </p>
+                  <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Destination</span>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{quotation.destination}</p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Shipping Information */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Shipping Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Shipping Method</span>
-              <p className="text-gray-800 dark:text-gray-200">
-                {quotation.shippingMethod}
-              </p>
-            </div>
-            <div>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Destination</span>
-              <p className="text-gray-800 dark:text-gray-200">
-                {quotation.destination}
-              </p>
-            </div>
           </div>
         </div>
 
         {/* Receiver Information */}
         {(quotation.receiver_name || quotation.receiver_phone || quotation.receiver_address) && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-              Receiver Information
-            </h3>
-            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-[#BBDEFB] dark:border-blue-900/40 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-[#E3F2FD] dark:bg-blue-900/20 border-b border-[#BBDEFB] dark:border-blue-900/40">
+              <svg className="w-4 h-4 text-[#0D47A1]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <h3 className="text-sm font-semibold text-[#0D47A1] dark:text-blue-300 uppercase tracking-wide">Receiver Information</h3>
+            </div>
+            <div className="p-4 bg-white dark:bg-gray-800">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Receiver Name</span>
-                  <p className="text-gray-800 dark:text-gray-200 font-medium">
-                    {quotation.receiver_name || "N/A"}
-                  </p>
+                  <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Receiver Name</span>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{quotation.receiver_name || "—"}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Phone Number</span>
-                  <p className="text-gray-800 dark:text-gray-200 font-medium">
-                    {quotation.receiver_phone || "N/A"}
-                  </p>
+                  <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Phone Number</span>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{quotation.receiver_phone || "—"}</p>
                 </div>
                 <div className="md:col-span-2">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Delivery Address</span>
-                  <p className="text-gray-800 dark:text-gray-200 font-medium whitespace-pre-line">
-                    {quotation.receiver_address || "N/A"}
-                  </p>
+                  <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Delivery Address</span>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-0.5 whitespace-pre-line">{quotation.receiver_address || "—"}</p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Fees Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            Fees
-          </h3>
-          {isLoadingFee ? (
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p className="text-gray-500 dark:text-gray-400 text-center">Loading fee...</p>
-            </div>
-          ) : fee !== null ? (
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-700 dark:text-gray-300 font-medium">Service Fee:</span>
-                <span className="text-gray-800 dark:text-white font-semibold text-lg">
-                  {formatFee(fee)}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p className="text-gray-500 dark:text-gray-400 text-center">No fee associated with this quotation</p>
-            </div>
-          )}
-        </div>
-
         {/* Price Options Section */}
         {renderPriceOptionsSection()}
 
-        {/* Selected Option Details */}
+        {/* Selected Option Details — fee integrated here */}
         {quotation.selected_option && (
-          <div className="mt-4">
-            <h5 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Price Details</h5>
-            <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-1">
-              <li>Price per unit: <span className="font-medium">{
-                (() => {
-                  let val: unknown = null;
-                  if (quotation.priceOptions && quotation.selected_option) {
-                    const idx = Number(quotation.selected_option) - 1;
-                    if (quotation.priceOptions[idx]) {
-                      // Try to get unit price from the dynamic field first
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      val = (quotation.priceOptions[idx] as any)[`unit_price_option${quotation.selected_option}`];
-                      // Fallback to price field if dynamic field doesn't exist
-                      if (!val) {
-                        val = quotation.priceOptions[idx].price;
+          <div className="rounded-xl border border-[#BBDEFB] dark:border-blue-900/40 overflow-hidden">
+            <div className="px-4 py-3 bg-[#0D47A1] dark:bg-blue-900/50">
+              <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Price Summary</h3>
+            </div>
+            <div className="bg-white dark:bg-gray-800">
+              {/* Price per unit row */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3F2FD] dark:border-blue-900/30">
+                <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Price / Unit</span>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{
+                  (() => {
+                    let val: unknown = null;
+                    if (quotation.priceOptions && quotation.selected_option) {
+                      const idx = Number(quotation.selected_option) - 1;
+                      if (quotation.priceOptions[idx]) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        val = (quotation.priceOptions[idx] as any)[`unit_price_option${quotation.selected_option}`];
+                        if (!val) val = quotation.priceOptions[idx].price;
                       }
                     }
-                  }
-                  // Fallback to direct field if price is not found in priceOptions
-                  if (!val && quotation.selected_option) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    val = (quotation as any)[`unit_price_option${quotation.selected_option}`];
-                  }
-                  const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
-                  return !isNaN(num) ? num.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : 'N/A';
-                })()
-              }</span></li>
-              <li>Quantity: <span className="font-medium">{parseFloat(quotation.quantity).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span></li>
-              <li>Service fees: <span className="font-medium">{
-                (() => {
-                  // First try to use the fetched fee from state
-                  if (fee !== null && fee !== undefined) {
-                    const feeNum = typeof fee === 'string' ? parseFloat(fee) : typeof fee === 'number' ? fee : NaN;
-                    return !isNaN(feeNum) ? feeNum.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : 'N/A';
-                  }
-                  
-                  // Fallback to quotation object
-                  const quotationFee: string | number | undefined = (quotation as QuotationWithFees).Quotation_fees ?? undefined;
-                  const feeNum = typeof quotationFee === 'string' ? parseFloat(quotationFee) : typeof quotationFee === 'number' ? quotationFee : NaN;
-                  return !isNaN(feeNum) ? feeNum.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : 'N/A';
-                })()
-              }</span></li>
-              <li>Total price: <span className="font-bold">{(() => {
-                // Try to get unit price from priceOptions if available
-                let val: unknown = null;
-                if (quotation.priceOptions && quotation.selected_option) {
-                  const idx = Number(quotation.selected_option) - 1;
-                  if (quotation.priceOptions[idx]) {
-                    // Try to get unit price from the dynamic field first
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    val = (quotation.priceOptions[idx] as any)[`unit_price_option${quotation.selected_option}`];
-                    // Fallback to price field if dynamic field doesn't exist
-                    if (!val) {
-                      val = quotation.priceOptions[idx].price;
+                    if (!val && quotation.selected_option) {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      val = (quotation as any)[`unit_price_option${quotation.selected_option}`];
                     }
-                  }
+                    const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
+                    return !isNaN(num) ? num.toLocaleString(undefined, { style: 'currency', currency: 'USD' }) : 'N/A';
+                  })()
+                }</span>
+              </div>
+              {/* Quantity row */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3F2FD] dark:border-blue-900/30">
+                <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Quantity</span>
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{parseFloat(quotation.quantity).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+              </div>
+              {/* Service fee row — only show when a real fee exists */}
+              {(() => {
+                let feeNum = NaN;
+                if (fee !== null && fee !== undefined) {
+                  feeNum = typeof fee === 'string' ? parseFloat(fee) : typeof fee === 'number' ? fee : NaN;
+                } else {
+                  const qf: string | number | undefined = (quotation as QuotationWithFees).Quotation_fees ?? undefined;
+                  feeNum = typeof qf === 'string' ? parseFloat(qf) : typeof qf === 'number' ? qf : NaN;
                 }
-                // Fallback to direct field
-                if (!val && quotation.selected_option) {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  val = (quotation as any)[`unit_price_option${quotation.selected_option}`];
-                }
-                const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : 0;
-                const qty = parseFloat(quotation.quantity) || 0;
-                const feeVal = (() => {
-                  // First try to use the fetched fee from state
-                  if (fee !== null && fee !== undefined) {
-                    return typeof fee === 'string' ? parseFloat(fee) : typeof fee === 'number' ? fee : 0;
-                  }
-                  
-                  // Fallback to quotation object
-                  const quotationFee: string | number | undefined = (quotation as QuotationWithFees).Quotation_fees ?? undefined;
-                  return typeof quotationFee === 'string' ? parseFloat(quotationFee) : typeof quotationFee === 'number' ? quotationFee : 0;
-                })();
-                // If all are zero, show N/A
-                if (!num && !qty && !feeVal) return 'N/A';
-                return (num * qty + feeVal).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
-              })()}</span></li>
-            </ul>
+                if (isNaN(feeNum)) return null;
+                return (
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#E3F2FD] dark:border-blue-900/30">
+                    <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Service Fee</span>
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      {feeNum.toLocaleString(undefined, { style: 'currency', currency: 'USD' })}
+                    </span>
+                  </div>
+                );
+              })()}
+              {/* Total row — highlighted */}
+              <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] dark:bg-blue-900/20">
+                <span className="text-sm font-bold text-[#0D47A1] dark:text-blue-300 uppercase tracking-wide">Total</span>
+                <span className="text-base font-bold text-[#0D47A1] dark:text-blue-200">{
+                  (() => {
+                    let val: unknown = null;
+                    if (quotation.priceOptions && quotation.selected_option) {
+                      const idx = Number(quotation.selected_option) - 1;
+                      if (quotation.priceOptions[idx]) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        val = (quotation.priceOptions[idx] as any)[`unit_price_option${quotation.selected_option}`];
+                        if (!val) val = quotation.priceOptions[idx].price;
+                      }
+                    }
+                    if (!val && quotation.selected_option) {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      val = (quotation as any)[`unit_price_option${quotation.selected_option}`];
+                    }
+                    const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : 0;
+                    const qty = parseFloat(quotation.quantity) || 0;
+                    const feeVal = (() => {
+                      if (fee !== null && fee !== undefined) return typeof fee === 'string' ? parseFloat(fee) : typeof fee === 'number' ? fee : 0;
+                      const qf: string | number | undefined = (quotation as QuotationWithFees).Quotation_fees ?? undefined;
+                      return typeof qf === 'string' ? parseFloat(qf) : typeof qf === 'number' ? qf : 0;
+                    })();
+                    if (!num && !qty && !feeVal) return 'N/A';
+                    return (num * qty + feeVal).toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+                  })()
+                }</span>
+              </div>
+            </div>
           </div>
         )}
 

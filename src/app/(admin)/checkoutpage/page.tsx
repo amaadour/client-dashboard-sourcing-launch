@@ -52,6 +52,8 @@ interface QuotationData {
   price?: string
   priceOptions?: PriceOption[]
   selectedOption?: string
+  client_label?: string | null
+  hasApprovedPayment?: boolean
 }
 
 type PaymentInsertData = Database['public']['Tables']['payments']['Insert']
@@ -76,6 +78,7 @@ function CheckoutPageContent() {
     quotationsFound: 0,
     priceOptionsFound: 0,
   })
+  const [labels, setLabels] = useState<Record<string, string>>({})
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [currentPaymentId, setCurrentPaymentId] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -701,12 +704,14 @@ function CheckoutPageContent() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-[#4285F4] mb-6">Product Quotations</h1>
+      <div className="mb-6 pb-4 border-b border-[#BBDEFB]">
+        <h1 className="text-2xl font-bold text-[#0D47A1]">Complete Payment</h1>
+        <p className="text-sm text-[#0D47A1]/60 mt-0.5">Select your quotations and confirm payment</p>
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Content - Product Grid */}
-        <div className="w-full lg:w-2/3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="w-full lg:w-2/3 space-y-4">
             {quotations.map((quotation) => {
               const selectedOptionId =
                 selectedOptions[quotation.id] || quotation.selectedOption || quotation.priceOptions?.[0]?.id || "1"
@@ -716,97 +721,88 @@ function CheckoutPageContent() {
               return (
                 <div
                   key={quotation.id}
-                  className={`bg-white border rounded-lg overflow-hidden shadow-sm transition-all ${
-                    isSelected ? "border-blue-500 ring-1 ring-blue-500" : "border-gray-200"
+                  className={`rounded-xl border overflow-hidden transition-all ${
+                    isSelected ? "border-[#0D47A1] ring-1 ring-[#0D47A1] shadow-sm" : "border-[#BBDEFB]"
                   }`}
                 >
-                  {/* Image Section */}
-                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center relative">
-                    <Image
-                      src={quotation.product.image || "/placeholder.svg"}
-                      alt={quotation.product.name}
-                      width={150}
-                      height={150}
-                      className="object-contain max-h-40"
-                    />
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
-                        Selected
-                      </div>
-                    )}
+                  {/* Card Header */}
+                  <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                    isSelected ? "bg-[#0D47A1] border-[#0D47A1]" : "bg-[#E3F2FD] border-[#BBDEFB]"
+                  }`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h3 className={`text-sm font-semibold uppercase tracking-wide truncate ${isSelected ? "text-white" : "text-[#0D47A1]"}`}>
+                        {quotation.product.name}
+                      </h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                        isSelected ? "bg-white/20 text-white" : "bg-[#BBDEFB] text-[#0D47A1]"
+                      }`}>{quotation.id}</span>
+                    </div>
+                    <button
+                      onClick={() => toggleQuotationSelection(quotation.id)}
+                      className={`w-6 h-6 rounded-full flex items-center justify-center border-2 flex-shrink-0 ml-2 transition-all ${
+                        isSelected ? "bg-white border-white text-[#0D47A1]" : "border-[#0D47A1]/40 text-transparent hover:border-[#0D47A1]"
+                      }`}
+                    >
+                      {isSelected && (
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
 
                   {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-medium text-gray-900">{quotation.product.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{quotation.product.description}</p>
-
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="text-gray-800">
-                        Base Price: <span className="font-medium">{quotation.price}</span>
+                  <div className="p-4 bg-white space-y-4">
+                    {/* Image + base price */}
+                    <div className="flex gap-3 items-start">
+                      <div className="w-18 h-18 rounded-lg border border-[#BBDEFB] bg-[#E3F2FD]/40 flex items-center justify-center flex-shrink-0 overflow-hidden" style={{width:72,height:72}}>
+                        <Image src={quotation.product.image || "/placeholder.svg"} alt={quotation.product.name} width={72} height={72} className="object-contain max-h-16" />
                       </div>
-                      <button
-                        onClick={() => toggleQuotationSelection(quotation.id)}
-                        className={`h-6 w-6 rounded-full flex items-center justify-center border ${
-                          isSelected ? "bg-blue-500 border-blue-500 text-white" : "border-gray-300 text-transparent"
-                        }`}
-                      >
-                        {isSelected && (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path>
-                          </svg>
-                        )}
-                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide font-medium mb-0.5">Base Price</p>
+                        <p className="text-lg font-bold text-[#0D47A1]">{quotation.price}</p>
+                        {quotation.product.description && <p className="text-xs text-gray-500 mt-1 truncate">{quotation.product.description}</p>}
+                      </div>
                     </div>
 
                     {/* Price Options */}
-                    <div className="mb-4">
-                      <div className="text-sm font-medium text-gray-700 mb-2">Price Options</div>
-                      <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold text-[#0D47A1]/60 uppercase tracking-wide mb-2">Price Options</p>
+                      <div className="space-y-2">
                         {quotation.priceOptions?.map((option) => {
                           const isOptionSelected = selectedOptionId === option.id
                           return (
                             <div
                               key={option.id}
-                              className={`border rounded-lg overflow-hidden transition-colors ${
-                                isOptionSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"
+                              className={`border rounded-lg transition-all ${
+                                isOptionSelected ? "border-[#0D47A1] bg-[#E3F2FD]" : "border-[#BBDEFB] hover:border-[#0D47A1]/40 hover:bg-[#E3F2FD]/30"
                               }`}
                             >
                               <div className="p-3">
-                                <div className="flex flex-col md:flex-row justify-between mb-2">
+                                <div className="flex items-start justify-between mb-1">
                                   <div>
-                                    <h4 className="font-medium text-gray-800">
-                                      {option.modelName || `Option ${option.id}`}
+                                    <div className="flex items-center gap-2">
+                                      <h4 className={`text-sm font-semibold ${isOptionSelected ? "text-[#0D47A1]" : "text-gray-800"}`}>
+                                        {option.modelName || `Option ${option.id}`}
+                                      </h4>
                                       {isOptionSelected && (
-                                        <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
-                                          Selected
-                                        </span>
+                                        <span className="px-2 py-0.5 bg-[#0D47A1] text-white text-xs rounded-full font-medium">Selected</span>
                                       )}
-                                    </h4>
-                                    <p className="text-sm text-gray-500">Supplier: {option.supplier}</p>
+                                    </div>
+                                    <p className="text-xs text-[#0D47A1]/60 mt-0.5">{option.supplier}</p>
                                   </div>
-                                  <div className="mt-2 md:mt-0">
-                                    <span className="font-bold text-lg text-blue-600">{option.price}</span>
-                                  </div>
+                                  <span className={`text-base font-bold ${isOptionSelected ? "text-[#0D47A1]" : "text-gray-700"}`}>{option.price}</span>
                                 </div>
-
-                                {option.description && (
-                                  <p className="text-sm text-gray-600 mb-2">{option.description}</p>
-                                )}
-
-                                <div className="flex flex-wrap justify-between items-center">
-                                  <div className="text-sm text-gray-500">
-                                    Delivery: <span className="font-medium">{option.deliveryTime}</span>
-                                  </div>
+                                {option.description && <p className="text-xs text-gray-500 mb-2">{option.description}</p>}
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-[#0D47A1]/60">Delivery: <span className="font-medium text-gray-700">{option.deliveryTime}</span></span>
                                   <button
                                     onClick={() => handleOptionSelect(quotation.id, option.id)}
-                                    className={`px-3 py-1 text-sm rounded transition-colors ${
-                                      isOptionSelected
-                                        ? "bg-blue-500 text-white"
-                                        : "border border-blue-500 text-blue-500 hover:bg-blue-50"
+                                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${
+                                      isOptionSelected ? "bg-[#0D47A1] text-white" : "border border-[#0D47A1] text-[#0D47A1] hover:bg-[#E3F2FD]"
                                     }`}
                                   >
-                                    {isOptionSelected ? "Selected" : "Select Option"}
+                                    {isOptionSelected ? "Selected" : "Select"}
                                   </button>
                                 </div>
                               </div>
@@ -816,135 +812,131 @@ function CheckoutPageContent() {
                       </div>
                     </div>
 
-                    {/* Quantity */}
-                    <div className="flex items-center mb-4">
-                      <button
-                        onClick={() => decrementQuantity(quotation.id)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100"
-                      >
-                        -
-                      </button>
-                      <div className="w-10 text-center">{quantity}</div>
-                      <button
-                        onClick={() => incrementQuantity(quotation.id)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100"
-                      >
-                        +
-                      </button>
-                      <div className="ml-auto text-right">
-                        <div className="text-lg font-bold text-gray-900">{getQuotationPrice(quotation).formatted}</div>
+                    {/* Shipping Label */}
+                    <div className="rounded-lg border border-[#BBDEFB] overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-2 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                        <span className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Shipping Label</span>
+                        {quotation.hasApprovedPayment && (
+                          <span className="flex items-center gap-1 text-xs text-[#0D47A1] bg-white border border-[#0D47A1]/30 px-2 py-0.5 rounded-full">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            Locked
+                          </span>
+                        )}
+                      </div>
+                      <div className="px-3 py-2 bg-white">
+                        {quotation.hasApprovedPayment ? (
+                          <p className="text-sm font-mono text-[#0D47A1]">{labels[quotation.id] || '—'}</p>
+                        ) : (
+                          <input
+                            type="text"
+                            value={labels[quotation.id] ?? ''}
+                            onChange={(e) => setLabels(prev => ({ ...prev, [quotation.id]: e.target.value }))}
+                            placeholder="Enter shipping label…"
+                            className="w-full text-sm text-[#0D47A1] placeholder-blue-200 bg-transparent focus:outline-none"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quantity + Total */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => decrementQuantity(quotation.id)} className="w-7 h-7 rounded-lg border border-[#BBDEFB] flex items-center justify-center text-[#0D47A1] hover:bg-[#E3F2FD] font-bold text-sm">−</button>
+                        <span className="w-8 text-center text-sm font-semibold text-[#0D47A1]">{quantity}</span>
+                        <button onClick={() => incrementQuantity(quotation.id)} className="w-7 h-7 rounded-lg border border-[#BBDEFB] flex items-center justify-center text-[#0D47A1] hover:bg-[#E3F2FD] font-bold text-sm">+</button>
+                        <span className="ml-1 text-xs text-[#0D47A1]/50 uppercase tracking-wide">Qty</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide">Total</p>
+                        <p className="text-base font-bold text-[#0D47A1]">{getQuotationPrice(quotation).formatted}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               )
             })}
-          </div>
         </div>
 
         {/* Order Summary */}
         <div className="w-full lg:w-1/3">
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-            <div className="p-5 border-b border-gray-200">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path>
-                </svg>
-                <h2 className="text-lg font-semibold text-gray-800">Order Summary</h2>
-              </div>
-              <div className="text-sm text-gray-500 mt-1">{selectedQuotationsList.length} items selected</div>
+          <div className="rounded-xl border border-[#BBDEFB] overflow-hidden sticky top-6">
+            {/* Header */}
+            <div className="px-4 py-3 bg-[#0D47A1]">
+              <h2 className="text-sm font-semibold text-white uppercase tracking-wide">Order Summary</h2>
+              <p className="text-xs text-white/60 mt-0.5">{selectedQuotationsList.length} item{selectedQuotationsList.length !== 1 ? 's' : ''} selected</p>
             </div>
 
-            {/* Selected Items List */}
-            <div className="divide-y divide-gray-200">
-              {selectedQuotationsList.map((quotation) => (
-                <div key={quotation.id} className="p-4">
-                  <div className="flex justify-between mb-1">
-                    <div className="font-medium">{quotation.product.name}</div>
-                    <div className="font-bold">{getQuotationPrice(quotation).formatted}</div>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {getSelectedOptionName(quotation)} × {quantities[quotation.id] || 1}
-                  </div>
+            {/* Selected Items */}
+            <div className="bg-white divide-y divide-[#E3F2FD]">
+              {selectedQuotationsList.length === 0 ? (
+                <div className="px-4 py-6 text-center">
+                  <p className="text-sm text-[#0D47A1]/40">No items selected yet</p>
                 </div>
-              ))}
+              ) : (
+                selectedQuotationsList.map((quotation) => (
+                  <div key={quotation.id} className="px-4 py-3">
+                    <div className="flex justify-between items-start mb-0.5">
+                      <span className="text-xs font-semibold text-[#0D47A1] truncate pr-2">{quotation.product.name}</span>
+                      <span className="text-xs font-bold text-[#0D47A1] flex-shrink-0">{getQuotationPrice(quotation).formatted}</span>
+                    </div>
+                    <p className="text-xs text-[#0D47A1]/50">{getSelectedOptionName(quotation)} × {quantities[quotation.id] || 1}</p>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Total */}
-            <div className="p-4 bg-gray-50 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <div className="font-medium text-gray-800">Total</div>
-                <div className="text-xl font-bold text-blue-600">{getTotalAmount()}</div>
-              </div>
+            <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] border-t border-[#BBDEFB]">
+              <span className="text-sm font-bold text-[#0D47A1] uppercase tracking-wide">Total</span>
+              <span className="text-lg font-bold text-[#0D47A1]">{getTotalAmount()}</span>
             </div>
 
             {/* Payment Method */}
-            <div className="p-5 border-t border-gray-200">
-              <h3 className="font-medium text-gray-900 mb-3">Payment Method</h3>
-              <div className="space-y-3">
-                {["BCA Bank Transfer", "Mandiri Bank Transfer", "BNI Bank Transfer", "BRI Bank Transfer"].map(
-                  (bank) => (
-                    <div
-                      key={bank}
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                        selectedBank === bank ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"
-                      }`}
-                      onClick={() => handleBankSelection(bank)}
-                    >
-                      <div className="flex items-center">
-                        <div className="mr-3">
-                          <div
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                              selectedBank === bank ? "border-blue-500" : "border-gray-400"
-                            }`}
-                          >
-                            {selectedBank === bank && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          <svg className="w-4 h-4 text-blue-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"></path>
-                            <path
-                              fillRule="evenodd"
-                              d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                              clipRule="evenodd"
-                            ></path>
-                          </svg>
-                          <span>{bank}</span>
-                        </div>
-                      </div>
+            <div className="bg-white border-t border-[#BBDEFB]">
+              <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Payment Method</h3>
+              </div>
+              <div className="p-3 space-y-2">
+                {["BCA Bank Transfer", "Mandiri Bank Transfer", "BNI Bank Transfer", "BRI Bank Transfer"].map((bank) => (
+                  <div
+                    key={bank}
+                    onClick={() => handleBankSelection(bank)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-all ${
+                      selectedBank === bank ? "border-[#0D47A1] bg-[#E3F2FD]" : "border-[#BBDEFB] hover:border-[#0D47A1]/40 hover:bg-[#E3F2FD]/40"
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                      selectedBank === bank ? "border-[#0D47A1]" : "border-[#BBDEFB]"
+                    }`}>
+                      {selectedBank === bank && <div className="w-2 h-2 rounded-full bg-[#0D47A1]" />}
                     </div>
-                  ),
-                )}
+                    <span className={`text-sm font-medium ${selectedBank === bank ? "text-[#0D47A1]" : "text-gray-600"}`}>{bank}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Complete Purchase Button */}
-            <div className="p-5 border-t border-gray-200">
+            {/* Complete Purchase + Back */}
+            <div className="p-4 bg-white border-t border-[#BBDEFB]">
               <button
                 onClick={handleCompletePayment}
                 disabled={selectedQuotationsList.length === 0 || !selectedBank}
-                className={`w-full py-3 rounded-lg font-medium text-white text-center ${
+                className={`w-full py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${
                   selectedQuotationsList.length > 0 && selectedBank
-                    ? "bg-blue-500 hover:bg-blue-600"
-                    : "bg-gray-300 cursor-not-allowed"
+                    ? "bg-[#0D47A1] text-white hover:bg-[#1565C0] shadow-sm"
+                    : "bg-[#E3F2FD] text-[#0D47A1]/40 cursor-not-allowed"
                 }`}
               >
                 Complete Purchase
               </button>
+              <Link href="/quotation" className="block mt-2">
+                <button className="w-full py-2.5 rounded-lg text-sm font-medium text-[#0D47A1] border border-[#BBDEFB] hover:bg-[#E3F2FD] transition-all">
+                  Back to Quotations
+                </button>
+              </Link>
             </div>
           </div>
 
-          {/* Navigation Buttons */}
-          <div className="mt-4">
-            <Link href="/quotation">
-              <Button variant="outline" className="w-full text-blue-500 border-blue-500 hover:bg-blue-50">
-                Back to Quotations
-              </Button>
-            </Link>
-          </div>
-
-          {/* Debug info in development */}
           {process.env.NODE_ENV === "development" && <DebugInfo data={debugState} title="Debug Info" />}
         </div>
       </div>
@@ -952,17 +944,17 @@ function CheckoutPageContent() {
       {/* Payment Proof Upload Modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full relative overflow-hidden">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800">Upload Payment Proof</h3>
-                <button onClick={closeUploadModal} disabled={isUploading} className="text-gray-400 hover:text-gray-600">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full relative overflow-hidden border border-[#BBDEFB]">
+            <div className="px-4 py-3 bg-[#0D47A1] flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Upload Payment Proof</h3>
+                <button onClick={closeUploadModal} disabled={isUploading} className="text-white/70 hover:text-white">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                   </svg>
                 </button>
-              </div>
+            </div>
 
+            <div className="p-6">
               {uploadSuccess ? (
                 <div className="text-center py-6">
                   <div className="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">

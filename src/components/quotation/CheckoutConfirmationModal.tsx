@@ -291,23 +291,22 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
         showCloseButton={true} 
         className="max-w-md mx-auto"
       >
-        <div className="p-6 text-center">
+        <div className="p-8 text-center">
           {isLoadingOptions ? (
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray-700">Loading price options...</p>
+              <div className="w-9 h-9 border-4 border-[#0D47A1] border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-3 text-sm text-[#0D47A1]/60">Loading price options…</p>
             </div>
           ) : (
             <div className="flex flex-col items-center">
-              <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <p className="mt-4 text-lg font-medium text-gray-700">No price options available</p>
-              <p className="mt-2 text-gray-500">This quotation doesn&apos;t have any price options defined.</p>
-              <button
-                onClick={onClose}
-                className="mt-6 px-5 py-2 bg-[#1E88E5] text-white rounded-lg hover:bg-[#1976D2] transition-colors"
-              >
+              <div className="w-14 h-14 rounded-full bg-[#E3F2FD] flex items-center justify-center mb-3">
+                <svg className="w-7 h-7 text-[#0D47A1]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-base font-semibold text-[#0D47A1]">No price options available</p>
+              <p className="mt-1 text-sm text-[#0D47A1]/50">This quotation doesn&apos;t have any price options defined.</p>
+              <button onClick={onClose} className="mt-5 px-5 py-2.5 bg-[#0D47A1] text-white text-sm font-medium rounded-lg hover:bg-[#1565C0] transition-colors">
                 Close
               </button>
             </div>
@@ -515,48 +514,40 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
       className="max-w-3xl mx-auto"
     >
       <div className="flex flex-col h-full max-h-[85vh]">
-        {/* Fixed Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Complete Payment
-          </h2>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#BBDEFB] flex-shrink-0 bg-[#E3F2FD]">
+          <div>
+            <h2 className="text-lg font-bold text-[#0D47A1]">Complete Payment</h2>
+            <p className="text-xs text-[#0D47A1]/60 mt-0.5">{quotation.quotation_id} — {quotation.product?.name}</p>
+          </div>
           <button
             onClick={onClose}
-            className="ml-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-500 transition-all duration-200 hover:bg-gray-200 hover:text-gray-700 active:scale-95 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-[#BBDEFB] text-[#0D47A1] hover:bg-[#BBDEFB] transition-all active:scale-95"
             aria-label="Close modal"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="stroke-current"
-            >
-              <path
-                d="M18 6L6 18M6 6L18 18"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6L18 18" />
             </svg>
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-h-0">
-          {/* Price Options Selection */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Select Price Option
-            </h3>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-h-0 space-y-4 bg-white">
+
+          {/* Price Options */}
+          <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+            <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+              <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Select Price Option</h3>
+            </div>
+            <div className="p-4">
             {isLoadingOptions ? (
-              <div className="py-8 text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#1E88E5] border-r-transparent"></div>
-                <p className="mt-2 text-gray-600 dark:text-gray-300">Loading price options...</p>
+              <div className="py-6 text-center">
+                <div className="inline-block h-7 w-7 animate-spin rounded-full border-4 border-[#0D47A1] border-r-transparent"></div>
+                <p className="mt-2 text-sm text-[#0D47A1]/60">Loading price options…</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-2">
                 {priceOptions.map((option, index) => {
                   const isSelected = selectedPriceOption?.id === option.id;
                   const isCurrentlySelected = option.id === String(quotation.selected_option);
@@ -565,81 +556,58 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                     const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
                     return !isNaN(num) ? num : 0;
                   })();
-                  
                   return (
                     <button
                       key={option.id}
                       onClick={() => handlePriceOptionSelect(option, index)}
                       disabled={isUpdatingOption || !quotationUuid}
-                      className={`relative w-full p-4 border-2 rounded-xl transition-all duration-200 text-left ${
+                      className={`relative w-full p-3 border rounded-xl transition-all duration-200 text-left ${
                         isSelected
-                          ? 'border-[#1E88E5] bg-blue-50 dark:bg-blue-900/20 shadow-md'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-[#1E88E5] hover:shadow-sm bg-white dark:bg-gray-800'
+                          ? 'border-[#0D47A1] bg-[#E3F2FD]'
+                          : 'border-[#BBDEFB] hover:border-[#0D47A1]/40 hover:bg-[#E3F2FD]/40 bg-white'
                       } ${(isUpdatingOption || !quotationUuid) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
-                      <div className="flex items-start gap-4">
-                        <div 
-                          className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700 cursor-pointer group"
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-[#BBDEFB] cursor-pointer group"
                           onClick={(e) => handleMediaClick(e, option.modelImage || "/images/product/product-01.jpg")}
                         >
                           {isVideoUrl(option.modelImage || "") ? (
-                            <>
-                              <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M8 5v14l11-7z"/>
-                                </svg>
-                              </div>
-                              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] px-1 py-0.5 text-center">
-                                Video
-                              </div>
-                            </>
+                            <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+                              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
                           ) : (
-                            <Image
-                              src={option.modelImage || "/images/product/product-01.jpg"}
-                              alt={option.modelName || "Product Option"}
-                              fill
-                              className="object-cover"
-                            />
+                            <Image src={option.modelImage || "/images/product/product-01.jpg"} alt={option.modelName || "Option"} fill className="object-cover" />
                           )}
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex items-center justify-between gap-2 mb-1">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold text-gray-900 dark:text-white">
-                                Option {parseInt(option.id)}
+                              <h4 className={`text-sm font-semibold ${isSelected ? 'text-[#0D47A1]' : 'text-gray-800'}`}>
+                                Option {parseInt(option.id)} {option.modelName ? `— ${option.modelName}` : ''}
                               </h4>
                               {isCurrentlySelected && (
-                                <span className="text-xs font-medium text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/30 px-2 py-1 rounded-full">
-                                  Currently Selected
-                                </span>
+                                <span className="text-xs font-medium text-white bg-[#0D47A1] px-2 py-0.5 rounded-full">Selected</span>
                               )}
                               {isSelected && !isCurrentlySelected && (
-                                <span className="text-xs font-medium text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-                                  Selected
-                                </span>
+                                <span className="text-xs font-medium text-[#0D47A1] bg-[#BBDEFB] px-2 py-0.5 rounded-full">Choosing</span>
                               )}
                             </div>
-                            <div className="text-right">
-                              <div className="text-xl font-bold text-[#1E88E5] dark:text-blue-400">
+                            <div className="text-right flex-shrink-0">
+                              <div className={`text-base font-bold ${isSelected ? 'text-[#0D47A1]' : 'text-gray-700'}`}>
                                 ${unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">per unit</div>
+                              <div className="text-xs text-[#0D47A1]/50">per unit</div>
                             </div>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                            <span className="font-medium">Delivery:</span> {option.deliveryTime || 'N/A'}
-                          </p>
-                          {option.description && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
-                              {option.description}
-                            </p>
-                          )}
+                          <p className="text-xs text-[#0D47A1]/60">Delivery: <span className="font-medium text-gray-700">{option.deliveryTime || 'N/A'}</span></p>
+                          {option.description && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{option.description}</p>}
                         </div>
                       </div>
                       {isUpdatingOption && isSelected && (
-                        <div className="absolute inset-0 bg-white/70 dark:bg-gray-900/70 flex items-center justify-center rounded-xl">
-                          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-xl">
+                          <div className="w-5 h-5 border-2 border-[#0D47A1] border-t-transparent rounded-full animate-spin"></div>
                         </div>
                       )}
                     </button>
@@ -647,66 +615,72 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                 })}
               </div>
             )}
-          </div>
-
-          {/* Payment Method Selection */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Select Payment Method
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
-              {banks.map((bank) => {
-                const icon = getBankIcon(bank);
-                return (
-                  <button
-                    key={bank}
-                    onClick={() => setSelectedBank(bank)}
-                    className={`relative p-4 border-2 rounded-xl transition-all duration-200 ${
-                      selectedBank === bank 
-                        ? 'border-[#1E88E5] bg-blue-50 dark:bg-blue-900/20 shadow-md' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-[#1E88E5] hover:shadow-sm bg-white dark:bg-gray-800'
-                    }`}
-                  >
-                    {icon && (
-                      <div className="relative w-12 h-12 mx-auto mb-2">
-                        <Image
-                          src={icon}
-                          alt={bank}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    )}
-                    <div className={`text-sm font-medium text-center ${
-                      selectedBank === bank
-                        ? 'text-[#1E88E5] dark:text-blue-400'
-                        : 'text-gray-700 dark:text-gray-300'
-                    }`}>
-                      {bank}
-                    </div>
-                    {selectedBank === bank && (
-                      <div className="absolute top-2 right-2">
-                        <div className="w-5 h-5 bg-[#1E88E5] rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
             </div>
           </div>
 
+          {/* Payment Method */}
+          <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+            <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+              <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Payment Method</h3>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-3 gap-3">
+                {banks.map((bank) => {
+                  const icon = getBankIcon(bank);
+                  return (
+                    <button
+                      key={bank}
+                      onClick={() => setSelectedBank(bank)}
+                      className={`relative p-3 border rounded-xl transition-all duration-200 ${
+                        selectedBank === bank
+                          ? 'border-[#0D47A1] bg-[#E3F2FD] shadow-sm'
+                          : 'border-[#BBDEFB] hover:border-[#0D47A1]/40 hover:bg-[#E3F2FD]/40 bg-white'
+                      }`}
+                    >
+                      {icon && (
+                        <div className="relative w-10 h-10 mx-auto mb-1.5">
+                          <Image src={icon} alt={bank} fill className="object-contain" />
+                        </div>
+                      )}
+                      <div className={`text-xs font-semibold text-center ${selectedBank === bank ? 'text-[#0D47A1]' : 'text-gray-600'}`}>
+                        {bank}
+                      </div>
+                      {selectedBank === bank && (
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0D47A1] rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Information */}
+          {selectedBank && (
+            <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+              <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Bank Details — {selectedBank}</h3>
+              </div>
+              <div className="p-4 bg-white">
+                <BankInformation bank={selectedBank} />
+              </div>
+            </div>
+          )}
+
           {/* Price Summary */}
           {selectedPriceOption && (
-            <div className="mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 border border-blue-200 dark:border-gray-700">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Price Summary</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Unit Price:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
+            <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+              <div className="px-4 py-3 bg-[#0D47A1]">
+                <h3 className="text-xs font-semibold text-white uppercase tracking-wide">Price Summary</h3>
+              </div>
+              <div className="bg-white divide-y divide-[#E3F2FD]">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Unit Price</span>
+                  <span className="text-sm font-semibold text-gray-800">
                     {(() => {
                       const val = selectedPriceOption[`unit_price_option${selectedPriceOption.id}`];
                       const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
@@ -714,53 +688,43 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                     })()}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Quantity:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{parseNumeric(quotation.quantity)} units</span>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Quantity</span>
+                  <span className="text-sm font-semibold text-gray-800">{parseNumeric(quotation.quantity)} units</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Service Fee:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {quotationFees !== null
-                      ? `$${quotationFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      : 'N/A'}
-                  </span>
-                </div>
-                <div className="border-t border-blue-200 dark:border-gray-600 pt-2 mt-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-base font-semibold text-gray-900 dark:text-white">Total Amount:</span>
-                    <span className="text-2xl font-bold text-[#1E88E5] dark:text-blue-400">
-                      ${getTotalToPay().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {quotationFees !== null && (
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Service Fee</span>
+                    <span className="text-sm font-semibold text-gray-800">
+                      ${quotationFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
+                )}
+                <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD]">
+                  <span className="text-sm font-bold text-[#0D47A1] uppercase tracking-wide">Total</span>
+                  <span className="text-xl font-bold text-[#0D47A1]">
+                    ${getTotalToPay().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Bank Information */}
-          {selectedBank && (
-            <div className="mb-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Bank Information</h4>
-              <BankInformation bank={selectedBank} />
-            </div>
-          )}
-
-          {/* Error Message */}
+          {/* Error */}
           {errorMessage && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-sm text-red-600">{errorMessage}</p>
             </div>
           )}
         </div>
 
-        {/* Fixed Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-5 flex-shrink-0 bg-white dark:bg-gray-800">
-          <div className="flex flex-col sm:flex-row gap-3">
+        {/* Footer */}
+        <div className="border-t border-[#BBDEFB] px-5 py-4 flex-shrink-0 bg-white">
+          <div className="flex gap-3">
             <button
               onClick={onClose}
               disabled={isProcessing}
-              className="flex-1 sm:flex-none px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 text-gray-700 dark:text-gray-300 font-medium"
+              className="px-5 py-3 rounded-lg border border-[#BBDEFB] text-[#0D47A1] text-sm font-medium hover:bg-[#E3F2FD] transition-all disabled:opacity-50"
             >
               Cancel
             </button>
@@ -770,16 +734,10 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                 setErrorMessage(null);
                 if (selectedBank) {
                   window.lastSelectedPaymentMethod = selectedBank;
-                  try {
-                    sessionStorage.setItem('last_selected_payment_method', selectedBank);
-                  } catch {}
+                  try { sessionStorage.setItem('last_selected_payment_method', selectedBank); } catch {}
                 }
                 const resetTimeout = setTimeout(() => {
-                  if (isProcessing) {
-                    setIsProcessing(false);
-                    setIsLoading(false);
-                    setErrorMessage('The operation timed out. Please try again.');
-                  }
+                  if (isProcessing) { setIsProcessing(false); setIsLoading(false); setErrorMessage('The operation timed out. Please try again.'); }
                 }, 15000);
                 setTimeout(() => {
                   handleDirectPayment()
@@ -794,20 +752,20 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                 }, 0);
               }}
               disabled={isProcessing || isLoading || !selectedBank || !selectedPriceOption || !quotationUuid}
-              className="flex-1 px-6 py-3 bg-[#1E88E5] text-white rounded-lg hover:bg-[#1976D2] dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg"
+              className="flex-1 px-6 py-3 bg-[#0D47A1] text-white rounded-lg hover:bg-[#1565C0] transition-all flex items-center justify-center gap-2 disabled:bg-[#E3F2FD] disabled:text-[#0D47A1]/40 disabled:cursor-not-allowed font-semibold shadow-sm"
             >
               {(isProcessing || isLoading) ? (
                 <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Processing...
+                  Processing…
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
                   Proceed to Payment
                 </>

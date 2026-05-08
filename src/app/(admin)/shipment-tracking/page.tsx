@@ -630,210 +630,122 @@ export default function ShipmentTrackingPage() {
       >
         {selectedShipment && selectedShipment.quotation && (
           <div className="flex flex-col h-full max-h-[85vh]">
-            {/* Fixed Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#BBDEFB] flex-shrink-0 bg-[#E3F2FD]">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Shipment Details</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Tracking Number: <span className="font-medium text-gray-900 dark:text-white">{selectedShipment.quotation.quotation_id || "N/A"}</span>
-                </p>
+                <h2 className="text-lg font-bold text-[#0D47A1]">Shipment Details</h2>
+                <p className="text-xs text-[#0D47A1]/60 mt-0.5">{selectedShipment.quotation.quotation_id || "N/A"}</p>
               </div>
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="ml-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-500 transition-all duration-200 hover:bg-gray-200 hover:text-gray-700 active:scale-95 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-[#BBDEFB] text-[#0D47A1] hover:bg-[#BBDEFB] transition-all active:scale-95"
                 aria-label="Close modal"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="stroke-current"
-                >
-                  <path
-                    d="M18 6L6 18M6 6L18 18"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6L18 18" />
                 </svg>
               </button>
             </div>
-            
+
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-6 min-h-0">
-              {/* Product Information Card */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl p-5 mb-6 border border-gray-200 dark:border-gray-700">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="relative h-56 w-full overflow-hidden rounded-xl mb-4 border-2 border-gray-200 dark:border-gray-700 shadow-md">
-                      <Image
-                        src={selectedShipment.quotation.image_url || defaultProductImage}
-                        alt={selectedShipment.quotation.product_name || "Product"}
-                        fill
-                        className="object-cover"
-                      />
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-h-0 space-y-4 bg-white">
+
+              {/* Product + Status */}
+              <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Product</h3>
+                </div>
+                <div className="p-4 flex gap-4 items-start bg-white">
+                  <div
+                    className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#BBDEFB] flex-shrink-0 cursor-zoom-in group"
+                    onClick={() => {
+                      const img = selectedShipment.quotation?.image_url || defaultProductImage;
+                      setSelectedImage(img);
+                      setImageModalOpen(true);
+                    }}
+                  >
+                    <Image src={selectedShipment.quotation.image_url || defaultProductImage} alt={selectedShipment.quotation.product_name || "Product"} fill className="object-cover group-hover:scale-105 transition-transform duration-200" />
+                    <div className="absolute inset-0 bg-[#0D47A1]/0 group-hover:bg-[#0D47A1]/15 transition-colors flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{selectedShipment.quotation.product_name || "Product"}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Order ID: <span className="font-medium text-gray-900 dark:text-white">{selectedShipment.quotation.quotation_id || "N/A"}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-[#0D47A1]">{selectedShipment.quotation.product_name || "Product"}</h4>
+                    <p className="text-xs text-[#0D47A1]/60 mt-0.5 mb-2">{selectedShipment.quotation.quotation_id}</p>
+                    <Badge color={getStatusBadgeColor(selectedShipment.status)} size="sm">
+                      {selectedShipment.status || "Not Available"}
+                    </Badge>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide">Created</p>
+                    <p className="text-xs font-semibold text-gray-700 mt-0.5">{formatDate(selectedShipment.created_at)}</p>
+                    <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mt-2">
+                      {selectedShipment.status?.toLowerCase() === "delivered" ? "Delivered" : "Est. Delivery"}
+                    </p>
+                    <p className="text-xs font-semibold text-gray-700 mt-0.5">
+                      {selectedShipment.status?.toLowerCase() === "delivered"
+                        ? formatDate(selectedShipment.delivered_at)
+                        : formatDate(selectedShipment.estimated_delivery)}
                     </p>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Status</p>
-                      <div>
-                        <Badge color={getStatusBadgeColor(selectedShipment.status)} size="sm">
-                          {selectedShipment.status || "Not Available"}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Timeline</p>
-                      <div className="space-y-2">
-                        <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Created</p>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{formatDate(selectedShipment.created_at)}</p>
-                        </div>
-                        {selectedShipment.status?.toLowerCase() === "delivered" ? (
-                          <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Delivered</p>
-                            <p className="text-sm font-medium text-green-600 dark:text-green-400">{formatDate(selectedShipment.delivered_at)}</p>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Estimated Delivery</p>
-                            <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{formatDate(selectedShipment.estimated_delivery)}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
-              
-              {/* Location Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                {/* Origin Card */}
-                <div className="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-200">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#1E88E5]"></div>
-                  <div className="relative p-5 pl-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                        <svg className="w-5 h-5 text-[#1E88E5] dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
-                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Origin</div>
-                    </div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">China</div>
-                  </div>
-                </div>
 
-                {/* Current Location Card */}
-                <div className="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-200">
-                  <div className={`absolute top-0 left-0 w-1 h-full ${
-                    selectedShipment.location 
-                      ? 'bg-[#1E88E5]'
-                      : 'bg-gray-300 dark:bg-gray-600'
-                  }`}></div>
-                  <div className="relative p-5 pl-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`p-2 rounded-lg ${
-                        selectedShipment.location 
-                          ? 'bg-gray-100 dark:bg-gray-700'
-                          : 'bg-gray-50 dark:bg-gray-700/50'
-                      }`}>
-                        <svg className={`w-5 h-5 ${
-                          selectedShipment.location 
-                            ? 'text-[#1E88E5] dark:text-blue-400'
-                            : 'text-gray-400 dark:text-gray-500'
-                        }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </div>
-                      <div className={`text-xs font-semibold uppercase tracking-wider ${
-                        selectedShipment.location 
-                          ? 'text-gray-500 dark:text-gray-400'
-                          : 'text-gray-400 dark:text-gray-500'
-                      }`}>Current Location</div>
-                    </div>
-                    <div className={`text-lg font-bold mb-1 ${
-                      selectedShipment.location
-                        ? 'text-gray-900 dark:text-white'
-                        : 'text-gray-400 dark:text-gray-500'
-                    }`}>{selectedShipment.location || "Not updated"}</div>
-                    <div className={`text-xs font-medium ${
-                      selectedShipment.location 
-                        ? 'text-[#1E88E5] dark:text-blue-400'
-                        : 'text-gray-400 dark:text-gray-500'
-                    }`}>
-                      {selectedShipment.location ? "In Transit" : "Waiting for update"}
-                    </div>
-                  </div>
+              {/* Route */}
+              <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Route</h3>
                 </div>
-
-                {/* Destination Card */}
-                <div className="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-200">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#1E88E5]"></div>
-                  <div className="relative p-5 pl-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                        <svg className="w-5 h-5 text-[#1E88E5] dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Destination</div>
-                    </div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white mb-1">
-                      {selectedShipment.quotation.shipping_country || "Not specified"}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedShipment.quotation.shipping_city || "Not specified"}
-                    </div>
+                <div className="grid grid-cols-3 divide-x divide-[#BBDEFB] bg-white">
+                  <div className="px-4 py-3">
+                    <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-1">Origin</p>
+                    <p className="text-sm font-bold text-[#0D47A1]">China</p>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-1">Current</p>
+                    <p className={`text-sm font-bold ${selectedShipment.location ? 'text-[#0D47A1]' : 'text-gray-400'}`}>
+                      {selectedShipment.location || "—"}
+                    </p>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-1">Destination</p>
+                    <p className="text-sm font-bold text-[#0D47A1]">{selectedShipment.quotation.shipping_country || "—"}</p>
+                    <p className="text-xs text-[#0D47A1]/60">{selectedShipment.quotation.shipping_city}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Receiver Information Section */}
+              {/* Receiver */}
               {selectedShipment.receiver_name && (
-                <div className="mb-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Receiver Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Name</p>
-                      <p className="text-base font-semibold text-gray-900 dark:text-white">{selectedShipment.receiver_name}</p>
+                <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                  <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                    <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Receiver</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#E3F2FD] bg-white">
+                    <div className="px-4 py-3">
+                      <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Name</p>
+                      <p className="text-sm font-semibold text-gray-800">{selectedShipment.receiver_name}</p>
                     </div>
-                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Phone Number</p>
-                      <p className="text-base font-semibold text-gray-900 dark:text-white">{selectedShipment.receiver_phone}</p>
+                    <div className="px-4 py-3">
+                      <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Phone</p>
+                      <p className="text-sm font-semibold text-gray-800">{selectedShipment.receiver_phone || "—"}</p>
                     </div>
-                    <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Delivery Address</p>
-                      <p className="text-base font-medium text-gray-900 dark:text-white whitespace-pre-line">{selectedShipment.receiver_address}</p>
-                    </div>
+                    {selectedShipment.receiver_address && (
+                      <div className="md:col-span-2 px-4 py-3 border-t border-[#E3F2FD]">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Address</p>
+                        <p className="text-sm text-gray-800 whitespace-pre-line">{selectedShipment.receiver_address}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Carton Section */}
-              <div className="mb-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    Carton
-                  </h3>
+              {/* Carton / Label */}
+              <div className="rounded-xl border border-[#0D47A1] overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Carton Label</h3>
                   <button
                     onClick={() => openLabelModal()}
                     className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -855,211 +767,114 @@ export default function ShipmentTrackingPage() {
                     {(selectedShipment.quotation?.client_label || selectedShipment.label) ? 'Labeled' : 'Label'}
                   </button>
                 </div>
-                <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div className="px-4 py-3 bg-white">
                   {(selectedShipment.quotation?.client_label || selectedShipment.label) ? (
-                    <div>
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Label</p>
-                      <p className="text-base font-medium text-[#0D47A1] dark:text-blue-300 font-mono">
-                        {selectedShipment.quotation?.client_label || selectedShipment.label}
-                      </p>
-                    </div>
+                    <p className="text-sm font-mono font-semibold text-[#0D47A1]">
+                      {selectedShipment.quotation?.client_label || selectedShipment.label}
+                    </p>
                   ) : (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No label added yet</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Click the Label button to add one</p>
-                    </div>
+                    <p className="text-sm text-[#0D47A1]/40 italic">No label added yet — click the button to add one</p>
                   )}
                 </div>
               </div>
 
-              {/* Full Quotation Details Section */}
+              {/* Quotation Details */}
               {loadingQuotationDetails ? (
-                <div className="mb-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700 text-center">
-                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600 dark:text-gray-400">Loading quotation details...</p>
+                <div className="rounded-xl border border-[#BBDEFB] p-8 text-center bg-white">
+                  <div className="w-7 h-7 border-4 border-[#0D47A1] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                  <p className="text-sm text-[#0D47A1]/60">Loading quotation details…</p>
                 </div>
               ) : fullQuotationDetails ? (
-                  <div className="mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 border border-blue-200 dark:border-gray-700">
-                    {/* Complete Quotation Information */}
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                      <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Complete Quotation Details
-                    </h3>
-
-                    {/* Product Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Product Name</p>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.product_name || "N/A"}</p>
+                <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                  <div className="px-4 py-3 bg-[#0D47A1]">
+                    <h3 className="text-xs font-semibold text-white uppercase tracking-wide">Quotation Details</h3>
+                  </div>
+                  <div className="bg-white divide-y divide-[#E3F2FD]">
+                    <div className="grid grid-cols-2 divide-x divide-[#E3F2FD]">
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Product</p>
+                        <p className="text-sm font-semibold text-gray-800">{fullQuotationDetails.product_name || "—"}</p>
                       </div>
-                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Quantity</p>
-                        <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.quantity || "N/A"}</p>
-                      </div>
-                      {fullQuotationDetails.product_url && (
-                        <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Product URL</p>
-                          <a href={fullQuotationDetails.product_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline break-all">
-                            {fullQuotationDetails.product_url}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Shipping Information */}
-                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mb-6">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                        Shipping Information
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Country</p>
-                          <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.shipping_country || "N/A"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">City</p>
-                          <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.shipping_city || "N/A"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Method</p>
-                          <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.shipping_method || "N/A"}</p>
-                        </div>
-                        {fullQuotationDetails.service_type && (
-                          <div>
-                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Service Type</p>
-                            <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.service_type}</p>
-                          </div>
-                        )}
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Quantity</p>
+                        <p className="text-sm font-semibold text-gray-800">{fullQuotationDetails.quantity || "—"}</p>
                       </div>
                     </div>
-
-                    {/* Receiver Address from Quotation */}
-                    {(fullQuotationDetails.receiver_name || fullQuotationDetails.receiver_phone || fullQuotationDetails.receiver_address) && (
-                      <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mb-6">
-                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                          <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          Receiver Address (from Quotation)
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {fullQuotationDetails.receiver_name && (
-                            <div>
-                              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Name</p>
-                              <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.receiver_name}</p>
-                            </div>
-                          )}
-                          {fullQuotationDetails.receiver_phone && (
-                            <div>
-                              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Phone</p>
-                              <p className="text-base font-semibold text-gray-900 dark:text-white">{fullQuotationDetails.receiver_phone}</p>
-                            </div>
-                          )}
-                          {fullQuotationDetails.receiver_address && (
-                            <div className="md:col-span-2">
-                              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Address</p>
-                              <p className="text-base font-medium text-gray-900 dark:text-white whitespace-pre-line">{fullQuotationDetails.receiver_address}</p>
-                            </div>
-                          )}
-                        </div>
+                    <div className="grid grid-cols-3 divide-x divide-[#E3F2FD]">
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Country</p>
+                        <p className="text-sm font-semibold text-gray-800">{fullQuotationDetails.shipping_country || "—"}</p>
+                      </div>
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">City</p>
+                        <p className="text-sm font-semibold text-gray-800">{fullQuotationDetails.shipping_city || "—"}</p>
+                      </div>
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Method</p>
+                        <p className="text-sm font-semibold text-gray-800">{fullQuotationDetails.shipping_method || "—"}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 divide-x divide-[#E3F2FD]">
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Status</p>
+                        <Badge color={getStatusBadgeColor(fullQuotationDetails.status)} size="sm">{fullQuotationDetails.status || "—"}</Badge>
+                      </div>
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Created</p>
+                        <p className="text-xs font-semibold text-gray-800">{fullQuotationDetails.created_at ? new Date(fullQuotationDetails.created_at).toLocaleDateString() : "—"}</p>
+                      </div>
+                    </div>
+                    {fullQuotationDetails.product_url && (
+                      <div className="px-4 py-3">
+                        <p className="text-xs text-[#0D47A1]/60 uppercase tracking-wide mb-0.5">Product URL</p>
+                        <a href={fullQuotationDetails.product_url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#0D47A1] hover:underline break-all">{fullQuotationDetails.product_url}</a>
                       </div>
                     )}
-
-                    {/* Additional Information */}
-                    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Additional Information</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400 mb-1">Quotation ID</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{fullQuotationDetails.quotation_id || "N/A"}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400 mb-1">Status</p>
-                          <Badge color={getStatusBadgeColor(fullQuotationDetails.status)} size="sm">
-                            {fullQuotationDetails.status || "N/A"}
-                          </Badge>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400 mb-1">Created At</p>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {fullQuotationDetails.created_at ? new Date(fullQuotationDetails.created_at).toLocaleString() : "N/A"}
-                          </p>
-                        </div>
-                        {fullQuotationDetails.updated_at && (
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400 mb-1">Updated At</p>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {new Date(fullQuotationDetails.updated_at).toLocaleString()}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   </div>
+                </div>
               ) : null}
 
-              {/* Image Gallery Section - Show if images are available */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Shipment Images
-                </h3>
+              {/* Images */}
+              <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Shipment Images</h3>
+                </div>
+                <div className="p-4 bg-white">
                 {selectedShipment.images_urls && selectedShipment.images_urls.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {selectedShipment.images_urls.map((url, idx) => {
                       const isValid = isValidUrl(url);
                       const imageUrl = isValid ? validateImageUrl(url) : imagePlaceholder;
-                      
                       return (
-                        <div 
-                          key={idx} 
-                          className="relative h-40 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group"
-                          onClick={() => {
-                            setSelectedImage(imageUrl);
-                            setImageModalOpen(true);
-                          }}
+                        <div
+                          key={idx}
+                          className="relative h-32 rounded-lg overflow-hidden border border-[#BBDEFB] cursor-pointer group"
+                          onClick={() => { setSelectedImage(imageUrl); setImageModalOpen(true); }}
                         >
-                          <Image
-                            src={imageUrl}
-                            alt={`Shipment image ${idx + 1}`}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-200"
-                          />
-                          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                            </svg>
-                          </div>
+                          <Image src={imageUrl} alt={`Shipment image ${idx + 1}`} fill className="object-cover group-hover:scale-105 transition-transform duration-200" />
+                          <div className="absolute inset-0 bg-[#0D47A1]/0 group-hover:bg-[#0D47A1]/10 transition-colors" />
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-12 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm font-medium">No images available</p>
+                  <div className="text-center py-8 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
+                    <p className="text-sm text-[#0D47A1]/40">No images available</p>
                   </div>
                 )}
+                </div>
               </div>
 
               {/* Image Modal for Zooming */}
               {imageModalOpen && (
                 <div className="fixed inset-0 z-[9999] bg-black/90 dark:bg-black/95 flex items-center justify-center" onClick={() => setImageModalOpen(false)}>
-                  <button className="absolute right-3 top-3 z-[10000] flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11" onClick={(e) => {
-                    e.stopPropagation();
-                    setImageModalOpen(false);
-                  }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L6.04289 16.5413Z" fill="currentColor"></path>
+                  <button
+                    className="absolute right-5 top-5 z-[10000] flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white hover:text-gray-900 transition-all duration-200 active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); setImageModalOpen(false); }}
+                    aria-label="Close"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   </button>
                   
@@ -1105,53 +920,42 @@ export default function ShipmentTrackingPage() {
                 </div>
               )}
 
-              {/* Video Gallery Section - Show if videos are available */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Shipment Videos
-                </h3>
+              {/* Videos */}
+              <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Shipment Videos</h3>
+                </div>
+                <div className="p-4 bg-white">
                 {selectedShipment.videos_urls && selectedShipment.videos_urls.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {selectedShipment.videos_urls.map((url, idx) => {
                       const isValid = isValidUrl(url);
                       const videoUrl = isValid ? validateImageUrl(url) : "";
-                      
                       if (!isValid) return null;
-                      
                       return (
-                        <div key={idx} className="rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-md hover:shadow-lg transition-shadow">
-                          <video 
-                            controls
-                            className="w-full h-auto"
-                            preload="metadata"
-                          >
+                        <div key={idx} className="rounded-lg overflow-hidden border border-[#BBDEFB]">
+                          <video controls className="w-full h-auto" preload="metadata">
                             <source src={videoUrl} type="video/mp4" />
-                            Your browser does not support the video tag.
                           </video>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-12 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-sm font-medium">No videos available</p>
+                  <div className="text-center py-6 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
+                    <p className="text-sm text-[#0D47A1]/40">No videos available</p>
                   </div>
                 )}
+                </div>
               </div>
-              
+
             </div>
-            
-            {/* Fixed Footer */}
-            <div className="flex justify-end p-5 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
+
+            {/* Footer */}
+            <div className="flex justify-end px-5 py-4 border-t border-[#BBDEFB] flex-shrink-0 bg-white">
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 font-medium shadow-sm hover:shadow-md"
+                className="px-5 py-2.5 rounded-lg border border-[#BBDEFB] text-[#0D47A1] text-sm font-medium hover:bg-[#E3F2FD] transition-all"
               >
                 Close
               </button>
