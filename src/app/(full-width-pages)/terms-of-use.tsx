@@ -1,0 +1,1 @@
+// This file will be moved to client-dashboard/src/app/terms-of-use/page.tsx for proper Next.js routing. 
