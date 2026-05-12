@@ -45,4 +45,20 @@ export interface QuotationData {
   shipping_country?: string;
   shipping_city?: string;
   shipping_method_raw?: string;
-} 
+  // Dual pricing + customization
+  is_customizable?: boolean;
+  customization_price?: number | null;
+  selected_version?: 'stock' | 'customized' | null;
+  Quotation_fees?: number | null;
+}
+
+export interface CustomizationFile {
+  id: string;
+  quotation_id: string;
+  user_id: string;
+  file_url: string;
+  file_name: string;
+  file_type?: string | null;
+  file_size?: number | null;
+  created_at: string;
+}

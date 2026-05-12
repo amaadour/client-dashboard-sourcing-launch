@@ -179,7 +179,10 @@ export default function QuotationPage() {
             receiver_phone,
             receiver_address,
             rejection_reason,
-            client_label
+            client_label,
+            is_customizable,
+            customization_price,
+            selected_version
           `)
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
@@ -306,6 +309,9 @@ export default function QuotationPage() {
               receiver_address: item.receiver_address || undefined,
               rejection_reason: item.rejection_reason || null,
               client_label: item.client_label || null,
+              is_customizable: item.is_customizable ?? false,
+              customization_price: item.customization_price ?? null,
+              selected_version: (item.selected_version as 'stock' | 'customized' | null) ?? null,
               // Raw fields for edit mode
               product_url: item.product_url || undefined,
               service_type: item.service_type || undefined,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from "@/components/ui/modal";
 import Image from "next/image";
-import { QuotationData as BaseQuotationData, PriceOption } from '@/types/quotation';
+import { QuotationData as BaseQuotationData, PriceOption, CustomizationFile } from '@/types/quotation';
 import BankInformation from './BankInformation';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -26,10 +26,7 @@ declare global {
   }
 }
 
-// Define a type for quotation with Quotation_fees
-interface QuotationWithFees extends BaseQuotationData {
-  Quotation_fees?: string | number;
-}
+type QuotationWithFees = BaseQuotationData & { Quotation_fees?: string | number | null };
 
 interface CheckoutConfirmationModalProps {
   isOpen: boolean;
@@ -64,6 +61,10 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
   const [quotationFees, setQuotationFees] = useState<number | null>(null);
   const [previewMedia, setPreviewMedia] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [custFiles, setCustFiles] = useState<CustomizationFile[]>([]);
+  const [isUploadingCust, setIsUploadingCust] = useState(false);
+  const custFileRef = React.useRef<HTMLInputElement>(null);
+  const isCustomized = quotation.selected_version === 'customized' && !!quotation.is_customizable;
   
   // Check if URL is a video based on extension or content type
   const isVideoUrl = (url: string): boolean => {
@@ -200,7 +201,14 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
     };
     
     fetchQuotationData();
-    
+
+    // Fetch customization files if applicable
+    if (quotation.id && quotation.is_customizable) {
+      supabase.from('customization_files').select('*').eq('quotation_id', quotation.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => { if (data) setCustFiles(data as CustomizationFile[]); });
+    }
+
     return () => {
       window.removeEventListener('error', handleGlobalError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
@@ -263,13 +271,17 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
   }, [selectedBank]);
 
   const getTotalToPay = () => {
+    const quantity = parseNumeric(quotation.quantity);
+    // Customized version: unit_price × quantity (no service fee override)
+    if (isCustomized && quotation.customization_price) {
+      return parseNumeric(quotation.customization_price) * quantity;
+    }
     if (!selectedPriceOption) return 0;
     const optionNum = selectedPriceOption.id;
     const rawUnitPrice = selectedPriceOption[`unit_price_option${optionNum}`];
     const unitPrice = (typeof rawUnitPrice === 'string' || typeof rawUnitPrice === 'number' || rawUnitPrice == null)
       ? parseNumeric(rawUnitPrice)
       : 0;
-    const quantity = parseNumeric(quotation.quantity);
     let serviceFee = 0;
     if ((quotation as QuotationWithFees)?.Quotation_fees) {
       serviceFee = parseNumeric((quotation as QuotationWithFees).Quotation_fees);
@@ -281,6 +293,28 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
         : 0;
     }
     return unitPrice * quantity + serviceFee;
+  };
+
+  const handleCustUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const { user } = auth || {};
+    if (!file || !user?.id || !quotation.id) return;
+    setIsUploadingCust(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/${quotation.id}/${Date.now()}.${ext}`;
+      const { data: up, error: upErr } = await supabase.storage
+        .from('customization-files').upload(path, file, { upsert: false });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from('customization-files').getPublicUrl(up.path);
+      const { data: inserted } = await supabase.from('customization_files').insert({
+        quotation_id: quotation.id, user_id: user.id,
+        file_url: urlData.publicUrl, file_name: file.name,
+        file_type: file.type, file_size: file.size,
+      }).select('*').single();
+      if (inserted) setCustFiles(prev => [inserted as CustomizationFile, ...prev]);
+    } catch (err) { console.error('Upload error:', err); toast.error('Upload failed'); }
+    finally { setIsUploadingCust(false); if (custFileRef.current) custFileRef.current.value = ''; }
   };
 
   if (!priceOptions.length) {
@@ -535,8 +569,8 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-h-0 space-y-4 bg-white">
 
-          {/* Price Options */}
-          <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+          {/* Price Options — hidden when customized version is selected */}
+          {!isCustomized && <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
             <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
               <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Select Price Option</h3>
             </div>
@@ -616,7 +650,7 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
               </div>
             )}
             </div>
-          </div>
+          </div>}
 
           {/* Payment Method */}
           <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
@@ -672,27 +706,33 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
           )}
 
           {/* Price Summary */}
-          {selectedPriceOption && (
+          {(selectedPriceOption || isCustomized) && (
             <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
               <div className="px-4 py-3 bg-[#0D47A1]">
-                <h3 className="text-xs font-semibold text-white uppercase tracking-wide">Price Summary</h3>
+                <h3 className="text-xs font-semibold text-white uppercase tracking-wide">
+                  Price Summary {isCustomized && <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-[10px]">Customized</span>}
+                </h3>
               </div>
               <div className="bg-white divide-y divide-[#E3F2FD]">
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Unit Price</span>
                   <span className="text-sm font-semibold text-gray-800">
-                    {(() => {
-                      const val = selectedPriceOption[`unit_price_option${selectedPriceOption.id}`];
-                      const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
-                      return !isNaN(num) ? `$${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A';
-                    })()}
+                    {isCustomized && quotation.customization_price
+                      ? `$${parseNumeric(quotation.customization_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : (() => {
+                          if (!selectedPriceOption) return 'N/A';
+                          const val = selectedPriceOption[`unit_price_option${selectedPriceOption.id}`];
+                          const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
+                          return !isNaN(num) ? `$${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A';
+                        })()
+                    }
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Quantity</span>
                   <span className="text-sm font-semibold text-gray-800">{parseNumeric(quotation.quantity)} units</span>
                 </div>
-                {quotationFees !== null && (
+                {!isCustomized && quotationFees !== null && (
                   <div className="flex items-center justify-between px-4 py-3">
                     <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Service Fee</span>
                     <span className="text-sm font-semibold text-gray-800">
@@ -706,6 +746,53 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                     ${getTotalToPay().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Customization Files — required when customized version */}
+          {isCustomized && (
+            <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                <div>
+                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">
+                    Customization Files
+                    {custFiles.length === 0 && <span className="ml-2 text-red-500">*required</span>}
+                  </h3>
+                  <p className="text-xs text-[#0D47A1]/50 mt-0.5">Upload your specs before paying</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => custFileRef.current?.click()}
+                  disabled={isUploadingCust}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0D47A1] text-white text-xs font-medium hover:bg-[#1565C0] disabled:opacity-60 transition-colors"
+                >
+                  {isUploadingCust ? (
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  )}
+                  {isUploadingCust ? 'Uploading…' : 'Upload'}
+                </button>
+                <input ref={custFileRef} type="file" className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.zip"
+                  onChange={handleCustUpload} />
+              </div>
+              <div className="p-3 bg-white space-y-2">
+                {custFiles.length > 0 ? custFiles.map(file => (
+                  <div key={file.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#BBDEFB] bg-[#E3F2FD]/40">
+                    <svg className="w-4 h-4 text-[#0D47A1] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-[#0D47A1] truncate">{file.file_name}</p>
+                      {file.file_size && <p className="text-xs text-[#0D47A1]/50">{(file.file_size / 1024).toFixed(0)} KB</p>}
+                    </div>
+                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                  </div>
+                )) : (
+                  <div className="text-center py-5 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
+                    <p className="text-xs text-[#0D47A1]/40">No files uploaded — please upload your customization specs</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -751,7 +838,7 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                     });
                 }, 0);
               }}
-              disabled={isProcessing || isLoading || !selectedBank || !selectedPriceOption || !quotationUuid}
+              disabled={isProcessing || isLoading || !selectedBank || (!isCustomized && !selectedPriceOption) || !quotationUuid || (isCustomized && custFiles.length === 0)}
               className="flex-1 px-6 py-3 bg-[#0D47A1] text-white rounded-lg hover:bg-[#1565C0] transition-all flex items-center justify-center gap-2 disabled:bg-[#E3F2FD] disabled:text-[#0D47A1]/40 disabled:cursor-not-allowed font-semibold shadow-sm"
             >
               {(isProcessing || isLoading) ? (
