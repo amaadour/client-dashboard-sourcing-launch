@@ -727,6 +727,74 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
             </div>
           </div>
 
+          {/* Customization Files — shown right after option selection when customized */}
+          {isCustomized && (
+            <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                <div>
+                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">
+                    Customization Files
+                    {custFiles.length === 0 && <span className="ml-2 text-red-500">*required</span>}
+                  </h3>
+                  <p className="text-xs text-[#0D47A1]/50 mt-0.5">Upload your specs before paying</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => custFileRef.current?.click()}
+                  disabled={isUploadingCust}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0D47A1] text-white text-xs font-medium hover:bg-[#1565C0] disabled:opacity-60 transition-colors"
+                >
+                  {isUploadingCust ? (
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                  )}
+                  {isUploadingCust ? 'Uploading…' : 'Upload'}
+                </button>
+                <input ref={custFileRef} type="file" className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.zip"
+                  onChange={handleCustUpload} />
+              </div>
+              <div className="p-3 bg-white space-y-2">
+                {custFiles.length > 0 ? custFiles.map(file => (
+                  <div key={file.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#BBDEFB] bg-[#E3F2FD]/40">
+                    <svg className="w-4 h-4 text-[#0D47A1] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-[#0D47A1] truncate">{file.file_name}</p>
+                      {file.file_size && <p className="text-xs text-[#0D47A1]/50">{(file.file_size / 1024).toFixed(0)} KB</p>}
+                    </div>
+                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                  </div>
+                )) : (
+                  <div className="text-center py-5 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
+                    <p className="text-xs text-[#0D47A1]/40">No files uploaded — please upload your customization specs</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Shipping Label */}
+          <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+            <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB] flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#0D47A1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Shipping Label</h3>
+              <span className="ml-auto text-xs text-[#0D47A1]/40 italic">optional</span>
+            </div>
+            <div className="p-4 bg-white">
+              <input
+                type="text"
+                value={shippingLabel}
+                onChange={(e) => setShippingLabel(e.target.value)}
+                placeholder="Enter a label for your shipment (e.g. Order #123, Summer Batch…)"
+                className="w-full px-3 py-2.5 text-sm border border-[#BBDEFB] rounded-lg text-gray-800 placeholder:text-[#0D47A1]/30 focus:outline-none focus:border-[#0D47A1] focus:ring-1 focus:ring-[#0D47A1]/20 transition-colors bg-white"
+              />
+              <p className="mt-1.5 text-xs text-[#0D47A1]/40">This label will appear on your shipment tracking. You can leave it blank.</p>
+            </div>
+          </div>
+
           {/* Payment Method */}
           <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
             <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
@@ -824,74 +892,6 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
               </div>
             </div>
           )}
-
-          {/* Customization Files — required when customized version */}
-          {isCustomized && (
-            <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
-                <div>
-                  <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">
-                    Customization Files
-                    {custFiles.length === 0 && <span className="ml-2 text-red-500">*required</span>}
-                  </h3>
-                  <p className="text-xs text-[#0D47A1]/50 mt-0.5">Upload your specs before paying</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => custFileRef.current?.click()}
-                  disabled={isUploadingCust}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0D47A1] text-white text-xs font-medium hover:bg-[#1565C0] disabled:opacity-60 transition-colors"
-                >
-                  {isUploadingCust ? (
-                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                  )}
-                  {isUploadingCust ? 'Uploading…' : 'Upload'}
-                </button>
-                <input ref={custFileRef} type="file" className="hidden"
-                  accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.zip"
-                  onChange={handleCustUpload} />
-              </div>
-              <div className="p-3 bg-white space-y-2">
-                {custFiles.length > 0 ? custFiles.map(file => (
-                  <div key={file.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#BBDEFB] bg-[#E3F2FD]/40">
-                    <svg className="w-4 h-4 text-[#0D47A1] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-[#0D47A1] truncate">{file.file_name}</p>
-                      {file.file_size && <p className="text-xs text-[#0D47A1]/50">{(file.file_size / 1024).toFixed(0)} KB</p>}
-                    </div>
-                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
-                  </div>
-                )) : (
-                  <div className="text-center py-5 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
-                    <p className="text-xs text-[#0D47A1]/40">No files uploaded — please upload your customization specs</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Shipping Label */}
-          <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
-            <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB] flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#0D47A1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-              <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Shipping Label</h3>
-              <span className="ml-auto text-xs text-[#0D47A1]/40 italic">optional</span>
-            </div>
-            <div className="p-4 bg-white">
-              <input
-                type="text"
-                value={shippingLabel}
-                onChange={(e) => setShippingLabel(e.target.value)}
-                placeholder="Enter a label for your shipment (e.g. Order #123, Summer Batch…)"
-                className="w-full px-3 py-2.5 text-sm border border-[#BBDEFB] rounded-lg text-gray-800 placeholder:text-[#0D47A1]/30 focus:outline-none focus:border-[#0D47A1] focus:ring-1 focus:ring-[#0D47A1]/20 transition-colors bg-white"
-              />
-              <p className="mt-1.5 text-xs text-[#0D47A1]/40">This label will appear on your shipment tracking. You can leave it blank.</p>
-            </div>
-          </div>
 
           {/* Error */}
           {errorMessage && (
