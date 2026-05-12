@@ -64,7 +64,8 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
   const [custFiles, setCustFiles] = useState<CustomizationFile[]>([]);
   const [isUploadingCust, setIsUploadingCust] = useState(false);
   const custFileRef = React.useRef<HTMLInputElement>(null);
-  const isCustomized = quotation.selected_version === 'customized' && !!quotation.is_customizable;
+  const [localSelectedVersion, setLocalSelectedVersion] = useState<string | null>(quotation.selected_version || null);
+  const isCustomized = localSelectedVersion === 'customized' && !!quotation.is_customizable;
   
   // Check if URL is a video based on extension or content type
   const isVideoUrl = (url: string): boolean => {
@@ -317,7 +318,7 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
     finally { setIsUploadingCust(false); if (custFileRef.current) custFileRef.current.value = ''; }
   };
 
-  if (!priceOptions.length) {
+  if (!priceOptions.length && !quotation.is_customizable) {
     return (
       <Modal 
         isOpen={isOpen} 
@@ -352,15 +353,14 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
 
   const handlePriceOptionSelect = async (option: PriceOption, optionIndex: number) => {
     if (isUpdatingOption || !quotationUuid) return;
-    
+
     setIsUpdatingOption(true);
     try {
-      console.log(`Updating selected_option to ${optionIndex + 1} for quotation ${quotationUuid}`);
-      
       const { error: updateError } = await supabase
         .from('quotations')
-        .update({ 
+        .update({
           selected_option: optionIndex + 1,
+          selected_version: 'stock',
           updated_at: new Date().toISOString()
         })
         .eq('id', quotationUuid);
@@ -370,10 +370,30 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
       }
 
       setSelectedPriceOption(option);
+      setLocalSelectedVersion('stock');
       toast.success('Price option selected successfully');
     } catch (error) {
       console.error('Error updating selected option:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update selected option');
+    } finally {
+      setIsUpdatingOption(false);
+    }
+  };
+
+  const handleCustomizedSelect = async () => {
+    if (isUpdatingOption || !quotationUuid) return;
+    setIsUpdatingOption(true);
+    try {
+      const { error } = await supabase
+        .from('quotations')
+        .update({ selected_version: 'customized', updated_at: new Date().toISOString() })
+        .eq('id', quotationUuid);
+      if (error) throw new Error(error.message);
+      setLocalSelectedVersion('customized');
+      setSelectedPriceOption(null);
+      toast.success('Customized version selected');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to select customized version');
     } finally {
       setIsUpdatingOption(false);
     }
@@ -388,7 +408,7 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
       return;
     }
     
-    if (!quotationUuid || !selectedBank || !selectedPriceOption) {
+    if (!quotationUuid || !selectedBank || (!isCustomized && !selectedPriceOption)) {
       toast.error("Missing required information");
       setErrorMessage('Please select a payment option and bank before proceeding.');
       setIsLoading(false);
@@ -569,8 +589,8 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-5 min-h-0 space-y-4 bg-white">
 
-          {/* Price Options — hidden when customized version is selected */}
-          {!isCustomized && <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+          {/* Select Price Option */}
+          <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
             <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
               <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Select Price Option</h3>
             </div>
@@ -583,8 +603,8 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
             ) : (
               <div className="space-y-2">
                 {priceOptions.map((option, index) => {
-                  const isSelected = selectedPriceOption?.id === option.id;
-                  const isCurrentlySelected = option.id === String(quotation.selected_option);
+                  const isSelected = !isCustomized && selectedPriceOption?.id === option.id;
+                  const isCurrentlySelected = !isCustomized && option.id === String(quotation.selected_option);
                   const unitPrice = (() => {
                     const val = option[`unit_price_option${option.id}`];
                     const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
@@ -647,10 +667,57 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                     </button>
                   );
                 })}
+
+                {/* Customized option card */}
+                {quotation.is_customizable && (
+                  <button
+                    onClick={handleCustomizedSelect}
+                    disabled={isUpdatingOption || !quotationUuid}
+                    className={`relative w-full p-3 border rounded-xl transition-all duration-200 text-left ${
+                      isCustomized
+                        ? 'border-[#0D47A1] bg-[#E3F2FD]'
+                        : 'border-dashed border-[#0D47A1]/40 hover:border-[#0D47A1] hover:bg-[#E3F2FD]/40 bg-white'
+                    } ${(isUpdatingOption || !quotationUuid) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-16 h-16 rounded-lg flex-shrink-0 flex items-center justify-center border ${isCustomized ? 'border-[#0D47A1] bg-[#0D47A1]/10' : 'border-dashed border-[#0D47A1]/40 bg-[#E3F2FD]/50'}`}>
+                        <svg className={`w-7 h-7 ${isCustomized ? 'text-[#0D47A1]' : 'text-[#0D47A1]/50'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className={`text-sm font-semibold ${isCustomized ? 'text-[#0D47A1]' : 'text-gray-800'}`}>
+                              Customized Version
+                            </h4>
+                            {isCustomized && (
+                              <span className="text-xs font-medium text-white bg-[#0D47A1] px-2 py-0.5 rounded-full">Selected</span>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className={`text-base font-bold ${isCustomized ? 'text-[#0D47A1]' : 'text-gray-700'}`}>
+                              {quotation.customization_price
+                                ? `$${parseNumeric(quotation.customization_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : 'N/A'}
+                            </div>
+                            <div className="text-xs text-[#0D47A1]/50">per unit</div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-[#0D47A1]/60">Upload your specs &amp; customization files to proceed</p>
+                      </div>
+                    </div>
+                    {isUpdatingOption && isCustomized && (
+                      <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-xl">
+                        <div className="w-5 h-5 border-2 border-[#0D47A1] border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </button>
+                )}
               </div>
             )}
             </div>
-          </div>}
+          </div>
 
           {/* Payment Method */}
           <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
