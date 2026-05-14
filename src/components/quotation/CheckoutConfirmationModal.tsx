@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from "@/components/ui/modal";
 import Image from "next/image";
 import { QuotationData as BaseQuotationData, PriceOption, CustomizationFile } from '@/types/quotation';
-import BankInformation from './BankInformation';
+import BankInformation, { BankType } from './BankInformation';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from '@/context/AuthContext';
-
-type BankType = 'WISE' | 'PAYONEER' | 'BINANCE';
 
 // Define interface for global window object extension
 interface PaymentInfo {
@@ -553,18 +551,24 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
     }
   };
 
-  const banks: BankType[] = ['WISE', 'PAYONEER', 'BINANCE'];
+  const banks: BankType[] = ['PAYONEER', 'WISE', 'AIRWALLEX', 'WIRE', 'BINANCE'];
 
-  const getBankIcon = (bank: BankType) => {
+  const getBankIcon = (bank: BankType): string | null => {
     switch (bank) {
-      case 'WISE':
-        return '/images/banks/wise1.svg';
-      case 'PAYONEER':
-        return '/images/banks/payoneer.svg';
-      case 'BINANCE':
-        return '/images/banks/Binance_Logo.svg.png';
-      default:
-        return null;
+      case 'PAYONEER': return '/images/banks/payoneer.svg';
+      case 'WISE': return '/images/banks/wise1.svg';
+      case 'BINANCE': return '/images/banks/Binance_Logo.svg.png';
+      default: return null;
+    }
+  };
+
+  const getBankLabel = (bank: BankType): string => {
+    switch (bank) {
+      case 'PAYONEER': return 'Payoneer';
+      case 'WISE': return 'Wise';
+      case 'AIRWALLEX': return 'Airwallex';
+      case 'WIRE': return 'Wire';
+      case 'BINANCE': return 'Binance';
     }
   };
 
@@ -801,26 +805,35 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
               <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Payment Method</h3>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {banks.map((bank) => {
                   const icon = getBankIcon(bank);
+                  const label = getBankLabel(bank);
                   return (
                     <button
                       key={bank}
                       onClick={() => setSelectedBank(bank)}
-                      className={`relative p-3 border rounded-xl transition-all duration-200 ${
+                      className={`relative p-3 border rounded-xl transition-all duration-200 flex flex-col items-center ${
                         selectedBank === bank
                           ? 'border-[#0D47A1] bg-[#E3F2FD] shadow-sm'
                           : 'border-[#BBDEFB] hover:border-[#0D47A1]/40 hover:bg-[#E3F2FD]/40 bg-white'
                       }`}
                     >
-                      {icon && (
-                        <div className="relative w-10 h-10 mx-auto mb-1.5">
-                          <Image src={icon} alt={bank} fill className="object-contain" />
+                      {icon ? (
+                        <div className="relative w-9 h-9 mb-1.5">
+                          <Image src={icon} alt={label} fill className="object-contain" />
+                        </div>
+                      ) : (
+                        <div className={`w-9 h-9 mb-1.5 rounded-lg flex items-center justify-center text-xs font-bold ${selectedBank === bank ? 'bg-[#0D47A1] text-white' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}>
+                          {bank === 'AIRWALLEX' ? 'AW' : bank === 'WIRE' ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                          ) : bank.slice(0, 2)}
                         </div>
                       )}
-                      <div className={`text-xs font-semibold text-center ${selectedBank === bank ? 'text-[#0D47A1]' : 'text-gray-600'}`}>
-                        {bank}
+                      <div className={`text-[11px] font-semibold text-center leading-tight ${selectedBank === bank ? 'text-[#0D47A1]' : 'text-gray-600'}`}>
+                        {label}
                       </div>
                       {selectedBank === bank && (
                         <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0D47A1] rounded-full flex items-center justify-center">
@@ -840,7 +853,7 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
           {selectedBank && (
             <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
               <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
-                <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Bank Details — {selectedBank}</h3>
+                <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">Bank Details — {selectedBank ? getBankLabel(selectedBank) : ''}</h3>
               </div>
               <div className="p-4 bg-white">
                 <BankInformation bank={selectedBank} />

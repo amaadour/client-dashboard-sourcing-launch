@@ -10,8 +10,42 @@ import { useAuth } from "@/context/AuthContext";
 import { Modal } from "@/components/ui/modal";
 import Badge from "@/components/ui/badge/Badge";
 
+const CopyRow = ({ label, value }: { label: string; value: string }) => {
+  const [copied, setCopied] = React.useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <div className="flex items-center justify-between gap-2 py-1.5 border-b border-[#E3F2FD] last:border-0 group">
+      <div className="min-w-0">
+        <span className="text-xs text-[#0D47A1]/50 font-medium">{label}</span>
+        <p className="text-sm text-gray-800 font-medium break-all">{value}</p>
+      </div>
+      <button
+        onClick={copy}
+        className="flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-[#E3F2FD] transition-all text-[#0D47A1]/50 hover:text-[#0D47A1]"
+        title={`Copy ${label}`}
+      >
+        {copied ? (
+          <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+};
+
 interface PaymentInfo {
   id: string;
+  reference_number?: string;
   amount: number;
   status: "Pending" | "processing" | "completed" | "failed" | "Approved";
   date: string;
@@ -285,8 +319,9 @@ export default function PaymentPage() {
             status,
             created_at,
             method,
-        proof_url,
-        quotation_ids
+            proof_url,
+            quotation_ids,
+            reference_number
           `)
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
@@ -298,12 +333,13 @@ export default function PaymentPage() {
         // Format the payment data with the new column names
         const formattedPayments = data.map((payment: Record<string, unknown>) => ({
           id: payment.id as string,
+          reference_number: payment.reference_number as string | undefined,
           amount: payment.total_amount as number,
           status: payment.status as "Pending" | "processing" | "completed" | "failed" | "Approved",
           date: new Date((payment.created_at as string)).toLocaleDateString(),
-      quotations: (payment.quotation_ids as string[] || []), // Use quotation_ids directly if available
+          quotations: (payment.quotation_ids as string[] || []),
           paymentMethod: payment.method as string,
-          proofUrl: payment.proof_url as string | undefined
+          proofUrl: payment.proof_url as string | undefined,
         }));
 
         setPayments(formattedPayments);
@@ -900,270 +936,212 @@ export default function PaymentPage() {
           </Button>
       </div>
 
-      {/* Bank Accounts Section - updated for dark mode */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-        <div className="p-5 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Bank Account Details
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Please use one of the following bank accounts for your payments
-          </p>
+      {/* Bank Accounts Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#BBDEFB] overflow-hidden mb-6">
+        <div className="px-5 py-4 border-b border-[#BBDEFB] bg-[#E3F2FD]">
+          <h2 className="text-base font-semibold text-[#0D47A1]">Bank Account Details</h2>
+          <p className="text-xs text-[#0D47A1]/60 mt-0.5">Use one of the following accounts for your payment</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5">
-          {/* Wise Bank */}
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800/60">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center">
-                <Image 
-                  src="/images/banks/wise1.svg" 
-                  alt="Wise Bank" 
-                  width={60} 
-                  height={60} 
-                  className="mr-3"
-                />
-                <h3 className="text-lg font-medium text-gray-800 dark:text-white">Wise Bank</h3>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                onClick={() => navigator.clipboard.writeText("BE24 9052 0546 8538")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy
-              </Button>
-            </div>
-            <div className="space-y-2 text-sm text-gray-800 dark:text-gray-300">
-              <p><span className="font-medium">Beneficiary Name:</span> SOURCING LAUNCH LTD</p>
-              <p><span className="font-medium">Email:</span> mehdi@sourcinglaunch.com</p>
-              <p><span className="font-medium">IBAN:</span> BE24 9052 0546 8538</p>
-              <p><span className="font-medium">Swift/BIC:</span> TRWIBEB1XXX</p>
-              <p><span className="font-medium">Address:</span> Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium</p>
-              <p><span className="font-medium">Currency:</span> EUR</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-5">
+
+          {/* Payoneer */}
+          <div className="border border-[#BBDEFB] rounded-xl p-4 bg-white">
+            <div className="relative w-24 h-8 mb-3"><Image src="/images/banks/payoneer.svg" alt="Payoneer" fill className="object-contain object-left" /></div>
+            <CopyRow label="Email" value="Mehdi@sourcinglaunch.com" />
+            <CopyRow label="Currency" value="USD" />
+          </div>
+
+          {/* Wise */}
+          <div className="border border-[#BBDEFB] rounded-xl p-4 bg-white">
+            <div className="relative w-16 h-8 mb-3"><Image src="/images/banks/wise1.svg" alt="Wise" fill className="object-contain object-left" /></div>
+            <CopyRow label="Email" value="Mehdi@sourcinglaunch.com" />
+            <CopyRow label="Currency" value="USD" />
+          </div>
+
+          {/* Airwallex */}
+          <div className="border border-[#BBDEFB] rounded-xl p-4 bg-white">
+            <div className="relative w-28 h-8 mb-3"><Image src="/images/banks/airwallex.png" alt="Airwallex" fill className="object-contain object-left" /></div>
+            <CopyRow label="Account Number" value="1011108303257824" />
+            <CopyRow label="Alternative Name" value="Dongguan Caiqi Supply Chain Co., Ltd." />
+            <CopyRow label="Currency" value="USD" />
+          </div>
+
+          {/* Wire Bank Transfer */}
+          <div className="border border-[#BBDEFB] rounded-xl p-4 bg-white md:col-span-2 xl:col-span-2">
+            <div className="relative w-24 h-10 mb-3"><Image src="/images/banks/bank-wire.png" alt="Wire Transfer" fill className="object-contain object-left" /></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <CopyRow label="Account Number" value="7982930215" />
+              <CopyRow label="Holder Name" value="Dongguan Caiqi Supply Chain Co., Ltd." />
+              <CopyRow label="Bank Name" value="DBS BANK (HONG KONG) LIMITED" />
+              <CopyRow label="Country" value="HONG KONG, CHINA" />
+              <CopyRow label="Bank Address" value="11th Floor, The Center, 99 Queen's Road Central, Central, Hong Kong" />
+              <CopyRow label="Account Type" value="Current" />
+              <CopyRow label="Swift / BIC" value="DHBKHKHH" />
+              <CopyRow label="Bank Code" value="016" />
+              <CopyRow label="Branch Number" value="478" />
+              <CopyRow label="Currency" value="USD" />
             </div>
           </div>
 
-          {/* Citibank (Payoneer) - Replacing Société Générale */}
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800/60">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center">
-                <Image 
-                  src="/images/banks/payoneer.svg" 
-                  alt="Citibank (Payoneer)" 
-                  width={60} 
-                  height={60} 
-                  className="mr-3"
-                />
-                <h3 className="text-lg font-medium text-gray-800 dark:text-white">Citibank (Payoneer)</h3>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                onClick={() => navigator.clipboard.writeText("70583160001753419")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy
-              </Button>
-            </div>
-            <div className="space-y-2 text-sm text-gray-800 dark:text-gray-300">
-              <p><span className="font-medium">Beneficiary Name:</span> SOURCING LAUNCH LTD</p>
-              <p><span className="font-medium">Email:</span> mehdi@sourcinglaunch.com</p>
-              <p><span className="font-medium">Account Number:</span> 70583160001753419</p>
-              <p><span className="font-medium">Account Type:</span> CHECKING</p>
-              <p><span className="font-medium">Routing (ABA):</span> 031100209</p>
-              <p><span className="font-medium">SWIFT Code:</span> CITIUS33</p>
-              <p><span className="font-medium">Bank Address:</span> 111 Wall Street New York, NY 10043 USA</p>
-              <p><span className="font-medium">Currency:</span> USD</p>
-            </div>
+          {/* Binance */}
+          <div className="border border-[#BBDEFB] rounded-xl p-4 bg-white">
+            <div className="relative w-28 h-8 mb-3"><Image src="/images/banks/Binance_Logo.svg.png" alt="Binance" fill className="object-contain object-left" /></div>
+            <CopyRow label="Binance ID" value="353293752" />
+            <CopyRow label="Name" value="SOURCING LAUNCH LTD" />
+            <CopyRow label="Wallet" value="0x236f536f5d68184073057259b1a4da495a28e8a8" />
+            <CopyRow label="Network" value="BNB Smart Chain (BEP20)" />
+            <CopyRow label="Currency" value="USDT" />
           </div>
 
-          {/* Binance Wallet */}
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800/60">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center">
-                <Image 
-                  src="/images/banks/Binance_Logo.svg.png" 
-                  alt="Binance Logo" 
-                  width={60} 
-                  height={60} 
-                  className="mr-3"
-                />
-                <h3 className="text-lg font-medium text-gray-800 dark:text-white">Binance Wallet</h3>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                onClick={() => navigator.clipboard.writeText("0x236f536f5d68184073057259b1a4da495a28e8a8")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy
-              </Button>
-            </div>
-            <div className="space-y-2 text-sm text-gray-800 dark:text-gray-300">
-              <p><span className="font-medium">Network:</span> BNB Smart Chain (BEP20)</p>
-              <p><span className="font-medium">Deposit Address:</span> 0x236f536f5d68184073057259b1a4da495a28e8a8</p>
-              <p><span className="font-medium">Currency:</span> USDT</p>
-            </div>
-          </div>
         </div>
       </div>
 
       {payments.length === 0 ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 className="text-blue-700 font-semibold text-lg mb-3">No Payments Found</h2>
-          <p className="text-blue-600 mb-4">You haven&apos;t made any payments yet.</p>
+        <div className="rounded-xl border border-[#BBDEFB] bg-[#E3F2FD] p-10 text-center">
+          <div className="w-12 h-12 rounded-full bg-white border border-[#BBDEFB] flex items-center justify-center mx-auto mb-3">
+            <svg className="w-6 h-6 text-[#0D47A1]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-[#0D47A1]">No payments yet</p>
+          <p className="text-xs text-[#0D47A1]/50 mt-1 mb-4">Your payment history will appear here.</p>
           <Link href="/quotation">
-            <Button variant="primary" className="bg-[#1E88E5] hover:bg-[#0D47A1]">
-              View Quotations
-            </Button>
+            <Button variant="primary" className="bg-[#0D47A1] hover:bg-[#1565C0]">View Quotations</Button>
           </Link>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-5 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-              Recent Payments
-            </h2>
+        <div className="rounded-xl border border-[#BBDEFB] overflow-hidden bg-white">
+
+          {/* Table header */}
+          <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+            <span className="text-[11px] font-semibold text-[#0D47A1] uppercase tracking-wide">Reference</span>
+            <span className="text-[11px] font-semibold text-[#0D47A1] uppercase tracking-wide">Date</span>
+            <span className="text-[11px] font-semibold text-[#0D47A1] uppercase tracking-wide">Method</span>
+            <span className="text-[11px] font-semibold text-[#0D47A1] uppercase tracking-wide">Amount</span>
+            <span className="text-[11px] font-semibold text-[#0D47A1] uppercase tracking-wide">Actions</span>
           </div>
 
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {payments.map((payment) => (
-              <div key={payment.id} className="p-5">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Payment ID:</span>
-                      <span className="font-medium text-gray-800 dark:text-white">{payment.id}</span>
+          <div className="divide-y divide-[#E3F2FD]">
+            {payments.map((payment) => {
+              const isExpanded = expandedPayment === payment.id;
+              const statusStyles: Record<string, string> = {
+                Approved:   'bg-green-100 text-green-700 border-green-200',
+                completed:  'bg-green-100 text-green-700 border-green-200',
+                Pending:    'bg-amber-100 text-amber-700 border-amber-200',
+                processing: 'bg-blue-100  text-blue-700  border-blue-200',
+                failed:     'bg-red-100   text-red-700   border-red-200',
+              };
+              const ss = statusStyles[payment.status] ?? 'bg-gray-100 text-gray-600 border-gray-200';
+              const methodLabel = payment.paymentMethod.charAt(0).toUpperCase() + payment.paymentMethod.slice(1).toLowerCase().replace(/_/g, ' ');
+
+              return (
+                <div key={payment.id}>
+                  {/* Row */}
+                  <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 items-center px-5 py-3.5 hover:bg-[#E3F2FD]/30 transition-colors">
+
+                    {/* Reference */}
+                    <div className="min-w-0">
+                      <p className="text-xs font-mono font-medium text-[#0D47A1] truncate">
+                        {payment.reference_number || '—'}
+                      </p>
+                      {payment.proofUrl && (
+                        <span className="inline-flex items-center gap-1 mt-1 text-[11px] text-green-600 font-medium">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                          Proof uploaded
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Date:</span>
-                      <span className="text-gray-700 dark:text-gray-300">{payment.date}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Method:</span>
-                      <span className="capitalize text-gray-700 dark:text-gray-300">{payment.paymentMethod.toLowerCase().replace('_', ' ')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Status:</span>
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-  payment.status === 'Approved'
-    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-    : getStatusColor(payment.status)
-}`}>
+
+                    {/* Date */}
+                    <p className="text-sm text-gray-600">{payment.date}</p>
+
+                    {/* Method */}
+                    <p className="text-sm text-gray-700 font-medium">{methodLabel}</p>
+
+                    {/* Amount + status */}
+                    <div>
+                      <p className="text-sm font-bold text-[#0D47A1]">
+                        ${payment.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      <span className={`mt-1 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full border ${ss}`}>
                         {payment.status}
                       </span>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col md:items-end gap-2">
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">${payment.amount.toFixed(2)}</div>
-
-                      <Button
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <button
                         onClick={() => handleUploadProof(payment.id)}
-                        variant="primary"
-                        size="sm"
-                      className={payment.proofUrl ? "bg-[#1E88E5] hover:bg-[#0D47A1]" : "bg-[#1E88E5] hover:bg-[#0D47A1]"}
+                        title={payment.proofUrl ? 'Update Proof' : 'Upload Proof'}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0D47A1] text-white text-xs font-semibold hover:bg-[#1565C0] transition-colors whitespace-nowrap"
                       >
-                      {payment.proofUrl ? "Update Proof" : "Upload Proof"}
-                      </Button>
-                    
-                    <Button
-                      onClick={() => openQuotationDetailsModal(payment)}
-                      variant="outline"
-                      size="sm"
-                      className="text-[#1E88E5] border-[#1E88E5] hover:bg-blue-50 dark:text-blue-400 dark:border-blue-400"
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Quotation details - shown when expanded */}
-                {expandedPayment === payment.id && (
-                  <div className="mt-4 border-t border-gray-100 pt-4">
-                    {/* Payment Proof Upload Section */}
-                    <div className="mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Payment Proof
-                    </h4>
-                    
-                      {renderFileUpload(payment)}
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        {payment.proofUrl ? 'Update' : 'Proof'}
+                      </button>
+                      <button
+                        onClick={() => openQuotationDetailsModal(payment)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BBDEFB] text-[#0D47A1] text-xs font-semibold hover:bg-[#E3F2FD] transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Details
+                      </button>
                     </div>
-                  
-                    {quotationsMap[payment.id]?.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {quotationsMap[payment.id].map((quotation) => (
-                          <div 
-                            key={quotation.uuid} 
-                            className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex items-start gap-3 bg-gray-50 dark:bg-gray-900"
-                          >
-                            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden flex-shrink-0">
-                              {quotation.hasImage ? (
-                                <Image
-                                  src={quotation.imageUrl || ''} 
-                                  alt={quotation.product_name}
-                                  width={48}
-                                  height={48}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-            </div>
-                              )}
-                            </div>
-                            <div className="flex-grow">
-                              <h5 className="text-sm font-medium text-gray-800 dark:text-white">
-                                {quotation.product_name}
-                              </h5>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                <p>Quantity: {quotation.quantity}</p>
-                                <p>Quotation ID: {quotation.id}</p>
-                              </div>
-                              {/* Status badge */}
-                              <div className="mt-2">
-                                <span
-                                  className={`px-2 py-1 text-xs font-semibold rounded-full
-                                    ${quotation.status === 'Rejected'
-                                      ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                      : quotation.status === 'Pending'
-                                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                      : quotation.status === 'Approved'
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}
-                                  `}
-                                >
-                                  {quotation.status}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                  </div>
+
+                  {/* Expanded: upload proof + quotations */}
+                  {isExpanded && (
+                    <div className="border-t border-[#BBDEFB] bg-[#E3F2FD]/20 px-5 py-4 space-y-4">
+                      <div>
+                        <p className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide mb-2">Upload Payment Proof</p>
+                        {renderFileUpload(payment)}
                       </div>
-              ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        
-                      </p>
-                    )}
+                      {quotationsMap[payment.id]?.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide mb-2">Linked Quotations</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {quotationsMap[payment.id].map((quotation) => {
+                              const qss: Record<string, string> = {
+                                Approved: 'bg-green-100 text-green-700',
+                                Pending:  'bg-amber-100 text-amber-700',
+                                Rejected: 'bg-red-100   text-red-700',
+                              };
+                              return (
+                                <div key={quotation.uuid} className="flex items-center gap-3 p-3 rounded-xl border border-[#BBDEFB] bg-white">
+                                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-[#BBDEFB] bg-[#E3F2FD] flex items-center justify-center">
+                                    {quotation.hasImage ? (
+                                      <Image src={quotation.imageUrl || ''} alt={quotation.product_name} width={40} height={40} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <svg className="w-5 h-5 text-[#0D47A1]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-800 truncate">{quotation.product_name}</p>
+                                    <p className="text-xs text-[#0D47A1]/50 mt-0.5">Qty: {quotation.quantity} · {quotation.id}</p>
+                                    <span className={`mt-1 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${qss[quotation.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                                      {quotation.status}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            ))}
-            </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
       {/* Quotation Details Modal */}
       <Modal

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 
-type BankType = 'WISE' | 'PAYONEER' | 'BINANCE';
+export type BankType = 'PAYONEER' | 'WISE' | 'AIRWALLEX' | 'WIRE' | 'BINANCE';
 
 interface BankInformationProps {
   bank: BankType;
@@ -10,198 +10,195 @@ interface BankInformationProps {
 interface BankDetails {
   name: string;
   logo?: string;
-  accountName: string;
-  email?: string;
-  accountNumber?: string;
-  iban?: string;
-  swift?: string;
-  swiftCode?: string;
-  ribNumber?: string;
-  address?: string;
   currency: string;
-  routing?: string;
+  // common
+  email?: string;
+  accountName?: string;
+  accountNumber?: string;
+  // airwallex
+  alternativeAccountName?: string;
+  // wire
+  holderName?: string;
+  bankName?: string;
+  bankLocationCountry?: string;
+  bankAddress?: string;
   accountType?: string;
+  swift?: string;
+  bankCode?: string;
+  branchNumber?: string;
+  // binance
+  binanceId?: string;
+  walletAddress?: string;
+  network?: string;
 }
 
 const bankInformation: Record<BankType, BankDetails> = {
-  WISE: {
-    name: "Wise Bank",
-    logo: "/images/banks/wise1.svg",
-    accountName: "SOURCING LAUNCH LTD",
-    email: "mehdi@sourcinglaunch.com",
-    iban: "BE24 9052 0546 8538",
-    swift: "TRWIBEB1XXX",
-    address: "Wise, Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium",
-    currency: "EUR"
-  },
   PAYONEER: {
-    name: "Citibank (Payoneer)",
-    logo: "/images/banks/payoneer.svg",
-    accountName: "SOURCING LAUNCH LTD",
-    email: "mehdi@sourcinglaunch.com",
-    accountNumber: "70583160001753419",
-    accountType: "CHECKING",
-    routing: "031100209",
-    swiftCode: "CITIUS33",
-    address: "111 Wall Street New York, NY 10043 USA",
-    currency: "USD"
+    name: 'Payoneer',
+    logo: '/images/banks/payoneer.svg',
+    email: 'Mehdi@sourcinglaunch.com',
+    currency: 'USD',
+  },
+  WISE: {
+    name: 'Wise',
+    logo: '/images/banks/wise1.svg',
+    email: 'Mehdi@sourcinglaunch.com',
+    currency: 'USD',
+  },
+  AIRWALLEX: {
+    name: 'Airwallex',
+    logo: '/images/banks/airwallex.png',
+    accountNumber: '1011108303257824',
+    alternativeAccountName: 'Dongguan Caiqi Supply Chain Co., Ltd.',
+    currency: 'USD',
+  },
+  WIRE: {
+    name: 'Wire Bank Transfer',
+    logo: '/images/banks/bank-wire.png',
+    accountNumber: '7982930215',
+    holderName: 'Dongguan Caiqi Supply Chain Co., Ltd.',
+    bankName: 'DBS BANK (HONG KONG) LIMITED',
+    bankLocationCountry: 'HONG KONG, CHINA',
+    bankAddress: '11th Floor, The Center, 99 Queen\'s Road Central, Central, Hong Kong',
+    accountType: 'Current',
+    swift: 'DHBKHKHH',
+    bankCode: '016',
+    branchNumber: '478',
+    currency: 'USD',
   },
   BINANCE: {
-    name: "Binance Wallet",
-    logo: "/images/banks/Binance_Logo.svg.png",
-    accountName: "Binance Wallet",
-    accountNumber: "0x236f536f5d68184073057259b1a4da495a28e8a8",
-    address: "Network: BNB Smart Chain (BEP20)",
-    currency: "USDT"
-  }
+    name: 'Binance',
+    logo: '/images/banks/Binance_Logo.svg.png',
+    binanceId: '353293752',
+    accountName: 'SOURCING LAUNCH LTD',
+    walletAddress: '0x236f536f5d68184073057259b1a4da495a28e8a8',
+    network: 'BNB Smart Chain (BEP20)',
+    currency: 'USDT',
+  },
+};
+
+const Row = ({ label, value }: { label: string; value: string }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <div className="flex items-start justify-between gap-3 py-2 border-b border-[#E3F2FD] last:border-0">
+      <div className="min-w-0">
+        <span className="block text-xs text-[#0D47A1]/50 uppercase tracking-wide font-medium">{label}</span>
+        <span className="block text-sm font-semibold text-gray-800 mt-0.5 break-all">{value}</span>
+      </div>
+      <button
+        onClick={copy}
+        title="Copy"
+        className="flex-shrink-0 mt-1 p-1.5 rounded-lg hover:bg-[#E3F2FD] transition-colors text-[#0D47A1]/50 hover:text-[#0D47A1]"
+      >
+        {copied ? (
+          <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+        ) : (
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
 };
 
 const BankInformation: React.FC<BankInformationProps> = ({ bank }) => {
   const info = bankInformation[bank];
 
-  const handleCopy = (info: BankDetails) => {
-    // Create a nicely formatted string with all relevant bank details
-    let textToCopy = `${info.name}\n`;
-    textToCopy += `Beneficiary Name: ${info.accountName}\n`;
-    
-    if (info.email) {
-      textToCopy += `Email: ${info.email}\n`;
-    }
-    
-    if (info.accountNumber) {
-      textToCopy += `Account Number: ${info.accountNumber}\n`;
-    }
-    
-    if (info.accountType) {
-      textToCopy += `Account Type: ${info.accountType}\n`;
-    }
-    
-    if (info.routing) {
-      textToCopy += `Routing (ABA): ${info.routing}\n`;
-    }
-    
-    if (info.iban) {
-      textToCopy += `IBAN: ${info.iban}\n`;
-    }
-    
-    if (info.ribNumber) {
-      textToCopy += `RIB Number: ${info.ribNumber}\n`;
-    }
-    
-    if (info.swift || info.swiftCode) {
-      textToCopy += `Swift/BIC: ${info.swift || info.swiftCode}\n`;
-    }
-    
-    if (info.address) {
-      textToCopy += `Address: ${info.address}\n`;
-    }
-    
-    textToCopy += `Currency: ${info.currency}`;
-    
-    navigator.clipboard.writeText(textToCopy)
-      .then(() => {
-        // Could add a toast notification here
-        console.log('Copied to clipboard');
-      })
-      .catch(err => {
-        console.error('Failed to copy: ', err);
-      });
+  const buildCopyText = () => {
+    const lines: string[] = [`=== ${info.name} ===`];
+    if (info.email) lines.push(`Email: ${info.email}`);
+    if (info.accountName) lines.push(`Name: ${info.accountName}`);
+    if (info.accountNumber) lines.push(`Account Number: ${info.accountNumber}`);
+    if (info.alternativeAccountName) lines.push(`Alternative Account Name: ${info.alternativeAccountName}`);
+    if (info.holderName) lines.push(`Holder Name: ${info.holderName}`);
+    if (info.bankName) lines.push(`Bank Name: ${info.bankName}`);
+    if (info.bankLocationCountry) lines.push(`Bank Location Country: ${info.bankLocationCountry}`);
+    if (info.bankAddress) lines.push(`Bank Address: ${info.bankAddress}`);
+    if (info.accountType) lines.push(`Account Type: ${info.accountType}`);
+    if (info.swift) lines.push(`Swift/BIC: ${info.swift}`);
+    if (info.bankCode) lines.push(`Bank Code: ${info.bankCode}`);
+    if (info.branchNumber) lines.push(`Branch Number: ${info.branchNumber}`);
+    if (info.binanceId) lines.push(`Binance ID: ${info.binanceId}`);
+    if (info.walletAddress) lines.push(`Wallet: ${info.walletAddress}`);
+    if (info.network) lines.push(`Network: ${info.network}`);
+    lines.push(`Currency: ${info.currency}`);
+    return lines.join('\n');
+  };
+
+  const [allCopied, setAllCopied] = useState(false);
+  const copyAll = () => {
+    navigator.clipboard.writeText(buildCopyText()).then(() => {
+      setAllCopied(true);
+      setTimeout(() => setAllCopied(false), 1500);
+    });
   };
 
   return (
-    <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800/60 mt-3">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
           {info.logo ? (
-            <Image src={info.logo} alt={info.name} width={24} height={24} />
+            <div className="relative w-6 h-6 flex-shrink-0">
+              <Image src={info.logo} alt={info.name} fill className="object-contain" />
+            </div>
           ) : (
-            <span className="text-lg font-medium text-blue-600 dark:text-blue-400">🏦</span>
+            <div className="w-6 h-6 rounded bg-[#0D47A1] flex items-center justify-center flex-shrink-0">
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
           )}
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{info.name}</h3>
+          <span className="text-sm font-bold text-[#0D47A1]">{info.name}</span>
+          <span className="text-xs text-[#0D47A1]/40 font-medium">{info.currency}</span>
         </div>
-        <button 
-          onClick={() => handleCopy(info)}
-          className="px-4 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+        <button
+          onClick={copyAll}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BBDEFB] text-xs font-medium text-[#0D47A1] hover:bg-[#E3F2FD] transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          Copy
+          {allCopied ? (
+            <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          )}
+          {allCopied ? 'Copied!' : 'Copy All'}
         </button>
       </div>
 
-      {/* Bank details area (removed scrollbar) */}
-      <div className="pr-1">
-        <div className="space-y-3">
-          <div>
-            <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Beneficiary Name:</span>
-            <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.accountName}</span>
-          </div>
-
-          {info.email && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Email:</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.email}</span>
-            </div>
-          )}
-
-          {info.accountNumber && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Account Number:</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.accountNumber}</span>
-            </div>
-          )}
-
-          {info.accountType && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Account Type:</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.accountType}</span>
-            </div>
-          )}
-
-          {info.routing && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Routing (ABA):</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.routing}</span>
-            </div>
-          )}
-
-          {info.iban && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">IBAN:</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.iban}</span>
-            </div>
-          )}
-
-          {info.ribNumber && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">RIB Number:</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.ribNumber}</span>
-            </div>
-          )}
-
-          {(info.swift || info.swiftCode) && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Swift/BIC:</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.swift || info.swiftCode}</span>
-            </div>
-          )}
-
-          {info.address && (
-            <div>
-              <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Address:</span>
-              <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.address}</span>
-            </div>
-          )}
-
-          <div>
-            <span className="block text-sm font-medium text-gray-700 dark:text-gray-400">Currency:</span>
-            <span className="block text-sm font-medium text-gray-900 dark:text-gray-200 mt-1">{info.currency}</span>
-          </div>
-        </div>
+      {/* Rows */}
+      <div className="rounded-xl border border-[#BBDEFB] overflow-hidden bg-white divide-y-0 px-3">
+        {info.email && <Row label="Email" value={info.email} />}
+        {info.accountName && <Row label="Name" value={info.accountName} />}
+        {info.accountNumber && <Row label="Account Number" value={info.accountNumber} />}
+        {info.alternativeAccountName && <Row label="Alternative Account Name" value={info.alternativeAccountName} />}
+        {info.holderName && <Row label="Holder Name" value={info.holderName} />}
+        {info.bankName && <Row label="Bank Name" value={info.bankName} />}
+        {info.bankLocationCountry && <Row label="Bank Location Country" value={info.bankLocationCountry} />}
+        {info.bankAddress && <Row label="Bank Address" value={info.bankAddress} />}
+        {info.accountType && <Row label="Account Type" value={info.accountType} />}
+        {info.swift && <Row label="Swift / BIC" value={info.swift} />}
+        {info.bankCode && <Row label="Bank Code" value={info.bankCode} />}
+        {info.branchNumber && <Row label="Branch Number" value={info.branchNumber} />}
+        {info.binanceId && <Row label="Binance ID" value={info.binanceId} />}
+        {info.walletAddress && <Row label="Wallet Address" value={info.walletAddress} />}
+        {info.network && <Row label="Network" value={info.network} />}
+        <Row label="Currency" value={info.currency} />
       </div>
     </div>
   );
 };
 
-export default BankInformation; 
+export default BankInformation;

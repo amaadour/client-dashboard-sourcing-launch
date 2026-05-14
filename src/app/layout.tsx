@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { Toaster } from "sonner";
 import { SupabaseProvider } from '@/context/SupabaseProvider'
+import NoScrollInput from "@/components/ui/NoScrollInput"
 
 const outfit = Outfit({
   variable: "--font-outfit-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({
             </SupabaseProvider>
           </AuthProvider>
         </ThemeProvider>
+        <NoScrollInput />
         <UIToaster />
         <Toaster />
       </body>
