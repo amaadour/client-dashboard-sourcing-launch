@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Modal } from "@/components/ui/modal";
+import { sendEmailClient } from "@/lib/sendEmailClient";
 import { 
   ArrowRightIcon, 
   CloseIcon, 
@@ -722,6 +723,28 @@ const QuotationFormModal: React.FC<QuotationFormModalProps> = ({ isOpen, onClose
           if (addressError) {
             console.error('Error saving address:', addressError);
           }
+        }
+      }
+
+      // Send email notification (fire-and-forget)
+      if (quotationData && quotationData.length > 0) {
+        const userEmail = sessionData?.session?.user?.email;
+        if (userEmail) {
+          sendEmailClient({
+            type: 'quotation_created',
+            clientEmail: userEmail,
+            quotation: {
+              quotation_id: quotationData[0].quotation_id || `QT-${Date.now()}`,
+              product_name: formData.productName,
+              quantity: parseInt(formData.quantity, 10),
+              status: 'Pending',
+              shipping_country: selectedCountry ? selectedCountry.name : '',
+              shipping_city: formData.destinationCity,
+              receiver_name: formData.receiverName,
+              service_type: formData.serviceType,
+              created_at: new Date().toISOString(),
+            },
+          });
         }
       }
 

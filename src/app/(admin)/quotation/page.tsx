@@ -182,7 +182,10 @@ export default function QuotationPage() {
             client_label,
             is_customizable,
             customization_price,
-            selected_version
+            selected_version,
+            custom_title_option1, custom_unit_price_option1, custom_unit_weight_option1, custom_images_option1, custom_description_option1, custom_delivery_option1,
+            custom_title_option2, custom_unit_price_option2, custom_unit_weight_option2, custom_images_option2, custom_description_option2, custom_delivery_option2,
+            selected_customization_option
           `)
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
@@ -312,6 +315,19 @@ export default function QuotationPage() {
               is_customizable: item.is_customizable ?? false,
               customization_price: item.customization_price ?? null,
               selected_version: (item.selected_version as 'stock' | 'customized' | null) ?? null,
+              custom_title_option1: (item as Record<string, unknown>).custom_title_option1 as string ?? null,
+              custom_unit_price_option1: (item as Record<string, unknown>).custom_unit_price_option1 as number ?? null,
+              custom_unit_weight_option1: (item as Record<string, unknown>).custom_unit_weight_option1 as number ?? null,
+              custom_images_option1: ((item as Record<string, unknown>).custom_images_option1 as string[]) ?? [],
+              custom_description_option1: (item as Record<string, unknown>).custom_description_option1 as string ?? null,
+              custom_delivery_option1: (item as Record<string, unknown>).custom_delivery_option1 as string ?? null,
+              custom_title_option2: (item as Record<string, unknown>).custom_title_option2 as string ?? null,
+              custom_unit_price_option2: (item as Record<string, unknown>).custom_unit_price_option2 as number ?? null,
+              custom_unit_weight_option2: (item as Record<string, unknown>).custom_unit_weight_option2 as number ?? null,
+              custom_images_option2: ((item as Record<string, unknown>).custom_images_option2 as string[]) ?? [],
+              custom_description_option2: (item as Record<string, unknown>).custom_description_option2 as string ?? null,
+              custom_delivery_option2: (item as Record<string, unknown>).custom_delivery_option2 as string ?? null,
+              selected_customization_option: (item as Record<string, unknown>).selected_customization_option as number ?? null,
               // Raw fields for edit mode
               product_url: item.product_url || undefined,
               service_type: item.service_type || undefined,

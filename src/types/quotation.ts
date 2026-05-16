@@ -50,6 +50,20 @@ export interface QuotationData {
   customization_price?: number | null;
   selected_version?: 'stock' | 'customized' | null;
   Quotation_fees?: number | null;
+  // Customized price options
+  custom_title_option1?: string | null;
+  custom_unit_price_option1?: number | null;
+  custom_unit_weight_option1?: number | null;
+  custom_images_option1?: string[] | null;
+  custom_description_option1?: string | null;
+  custom_delivery_option1?: string | null;
+  custom_title_option2?: string | null;
+  custom_unit_price_option2?: number | null;
+  custom_unit_weight_option2?: number | null;
+  custom_images_option2?: string[] | null;
+  custom_description_option2?: string | null;
+  custom_delivery_option2?: string | null;
+  selected_customization_option?: number | null;
 }
 
 export interface CustomizationFile {

@@ -41,6 +41,11 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
   const [selectedVersion, setSelectedVersion] = useState<'stock' | 'customized'>(
     quotation.selected_version === 'customized' ? 'customized' : 'stock'
   );
+  const hasCustomOption2 = !!(quotation.custom_title_option2 || quotation.custom_unit_price_option2);
+  const [selectedCustomOption, setSelectedCustomOption] = useState<number | null>(
+    quotation.selected_customization_option
+      ?? (hasCustomOption2 ? null : (quotation.custom_title_option1 || quotation.custom_unit_price_option1 ? 1 : null))
+  );
   const [custFiles, setCustFiles] = useState<CustomizationFile[]>([]);
   const [isUploadingCust, setIsUploadingCust] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -60,8 +65,32 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
 
   const handleVersionChange = async (version: 'stock' | 'customized') => {
     setSelectedVersion(version);
+    // Clear the other version's selection locally to prevent both showing as selected
+    if (version === 'stock') setSelectedCustomOption(null);
+    if (version === 'customized') setSelectedOption(null);
     await supabase.from('quotations').update({ selected_version: version } as never).eq('id', quotation.id);
   };
+
+  const handleCustomOptionSelect = async (optNum: number) => {
+    setSelectedCustomOption(optNum);
+    await supabase.from('quotations').update({ selected_customization_option: optNum } as never).eq('id', quotation.id);
+  };
+
+  // Auto-save selection when only 1 custom option exists
+  useEffect(() => {
+    if (quotation.is_customizable && !hasCustomOption2 && (quotation.custom_title_option1 || quotation.custom_unit_price_option1)) {
+      if (!quotation.selected_customization_option) {
+        supabase.from('quotations').update({ selected_customization_option: 1 } as never).eq('id', quotation.id);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotation.id]);
+
+  const selectedCustomPrice = selectedCustomOption === 1
+    ? quotation.custom_unit_price_option1
+    : selectedCustomOption === 2
+    ? quotation.custom_unit_price_option2
+    : null;
 
   const handleCustomizationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -322,10 +351,9 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
   }, [refreshKey]);
 
   const handlePayNow = () => {
-    // Customized version: no price option required, pay with customization_price × qty
     if (quotation.is_customizable && selectedVersion === 'customized') {
       onClose();
-      openCheckoutModal({ ...quotation, selected_version: 'customized' });
+      openCheckoutModal({ ...quotation, selected_version: 'customized', selected_customization_option: selectedCustomOption ?? undefined });
       return;
     }
     const optionToUse = savedOption || selectedOption;
@@ -458,7 +486,7 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
             Price Options
           </h3>
-          {quotation.selected_option && (
+          {quotation.selected_option && selectedVersion !== 'customized' && (
             <div className={`mb-4 flex items-center justify-between rounded-lg px-4 py-3 ${
               selectedOption && selectedOption !== String(quotation.selected_option)
                 ? 'bg-[#E3F2FD] border border-[#BBDEFB] dark:bg-blue-900/20 dark:border-blue-800'
@@ -488,7 +516,7 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
           )}
           <div className="space-y-6">
             {displayPriceOptions.map((option) => {
-              const isSelectedInDatabase = quotation.selected_option === parseInt(option.id, 10);
+              const isSelectedInDatabase = selectedVersion !== 'customized' && quotation.selected_option === parseInt(option.id, 10);
               const optionNum = option.id;
               // Dynamic keys for unit price and unit weight
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -852,106 +880,215 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
                 </button>
               </div>
 
-              {/* File upload — only when customized */}
+              {/* Version description */}
               {selectedVersion === 'customized' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-[#0D47A1]/60 uppercase tracking-wide">Customization Files</p>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploadingCust}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0D47A1] text-white text-xs font-medium hover:bg-[#1565C0] disabled:opacity-60 transition-colors"
-                    >
-                      {isUploadingCust ? (
-                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                        </svg>
-                      ) : (
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                      )}
-                      {isUploadingCust ? 'Uploading…' : 'Upload File'}
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.zip"
-                      onChange={handleCustomizationUpload}
-                    />
-                  </div>
-                  <p className="text-xs text-[#0D47A1]/50">Accepted: PDF, images, video, ZIP (max 50 MB)</p>
-
-                  {custFiles.length > 0 ? (
-                    <div className="space-y-2">
-                      {custFiles.map(file => (
-                        <div key={file.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-[#BBDEFB] bg-[#E3F2FD]/40">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <svg className="w-4 h-4 text-[#0D47A1] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium text-[#0D47A1] truncate">{file.file_name}</p>
-                              <p className="text-xs text-[#0D47A1]/50">{file.file_size ? `${(file.file_size / 1024).toFixed(0)} KB` : ''}</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCustFile(file)}
-                            className="flex-shrink-0 p-1 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-5 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
-                      <p className="text-xs text-[#0D47A1]/40">No files uploaded yet</p>
-                    </div>
-                  )}
-                </div>
+                <p className="text-xs text-[#0D47A1]/50 text-center">Select a customized price option below</p>
               )}
             </div>
           </div>
         )}
 
-        {/* Price Options Section — hidden when customized version is selected */}
+        {/* Customized Options — select one of 2 custom options */}
         {quotation.is_customizable && selectedVersion === 'customized' ? (
-          <div className="rounded-xl border border-[#BBDEFB] dark:border-blue-900/40 overflow-hidden">
-            <div className="px-4 py-3 bg-[#0D47A1]">
-              <h3 className="text-xs font-semibold text-white uppercase tracking-wide">Price Summary</h3>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+              <div className="px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">
+                  {hasCustomOption2 ? 'Select Customized Option' : 'Customized Option'}
+                </h3>
+              </div>
+              <div className="p-3 space-y-2">
+                {([1, 2] as const).map(optNum => {
+                  const title = quotation[`custom_title_option${optNum}`];
+                  const price = quotation[`custom_unit_price_option${optNum}`];
+                  const weight = quotation[`custom_unit_weight_option${optNum}`];
+                  const delivery = quotation[`custom_delivery_option${optNum}`];
+                  const description = quotation[`custom_description_option${optNum}`];
+                  const images = (quotation[`custom_images_option${optNum}`] as string[]) || [];
+                  if (!title && !price) return null;
+                  const isSelected = selectedVersion === 'customized' && selectedCustomOption === optNum;
+                  const qty = parseFloat(quotation.quantity || '1');
+                  return (
+                    <div
+                      key={optNum}
+                      className={`p-4 border rounded-lg transition-all ${isSelected ? 'border-[#1E88E5] bg-blue-50 dark:bg-blue-900/10' : 'border-gray-200 hover:border-[#1E88E5] dark:border-gray-700'}`}
+                    >
+                      {/* Option title row */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold flex-shrink-0 ${isSelected ? 'bg-[#0D47A1] text-white' : 'bg-[#BBDEFB] text-[#0D47A1]'}`}>C{optNum}</span>
+                          <h4 className="font-medium text-gray-800 dark:text-white">{title || `Custom Option ${optNum}`}</h4>
+                          {isSelected && <span className="ml-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full dark:bg-green-900/30 dark:text-green-400">Selected</span>}
+                        </div>
+                      </div>
+
+                      {/* Table — same style as stock price options */}
+                      <table className="min-w-full border-collapse mb-3 rounded-lg overflow-hidden border border-[#BBDEFB] dark:border-blue-900/40">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-2.5 text-xs font-semibold text-[#0D47A1] uppercase tracking-wide text-center bg-[#E3F2FD] dark:bg-blue-900/20 border border-[#BBDEFB] dark:border-blue-900/40">Unit Price</th>
+                            <th className="px-4 py-2.5 text-xs font-semibold text-[#0D47A1] uppercase tracking-wide text-center bg-[#E3F2FD] dark:bg-blue-900/20 border border-[#BBDEFB] dark:border-blue-900/40">Unit Weight (g)</th>
+                            <th className="px-4 py-2.5 text-xs font-semibold text-[#0D47A1] uppercase tracking-wide text-center bg-[#E3F2FD] dark:bg-blue-900/20 border border-[#BBDEFB] dark:border-blue-900/40">Est. Delivery</th>
+                            <th className="px-4 py-2.5 text-xs font-semibold text-[#0D47A1] uppercase tracking-wide text-center bg-[#E3F2FD] dark:bg-blue-900/20 border border-[#BBDEFB] dark:border-blue-900/40">Images</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td className="px-4 py-2.5 text-sm text-center border border-[#BBDEFB] dark:border-blue-900/40 font-bold text-[#0D47A1] dark:text-blue-300">
+                              {price ? `$${Number(price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-center border border-[#BBDEFB] dark:border-blue-900/40 text-gray-800 dark:text-white">
+                              {weight ? `${weight}` : '—'}
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-center border border-[#BBDEFB] dark:border-blue-900/40 text-gray-800 dark:text-white">
+                              {delivery || '—'}
+                            </td>
+                            <td className="px-4 py-2.5 text-sm text-center border border-[#BBDEFB] dark:border-blue-900/40">
+                              <div className="flex flex-wrap gap-2 justify-center">
+                                {images.length > 0 ? images.map((imgUrl, imgIdx) => (
+                                  <div
+                                    key={imgIdx}
+                                    className="relative w-16 h-16 rounded overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer group"
+                                    onClick={() => setPreviewMedia({ url: imgUrl, type: 'image' })}
+                                  >
+                                    <Image src={imgUrl} alt={`Custom ${optNum} img ${imgIdx + 1}`} fill className="object-cover" />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                      </svg>
+                                    </div>
+                                  </div>
+                                )) : <span className="text-gray-400 text-xs">No images</span>}
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      {/* Description */}
+                      {description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{description}</p>
+                      )}
+
+                      {/* Total + Select button */}
+                      <div className="flex items-center justify-between">
+                        {price && (
+                          <p className="text-sm text-[#0D47A1]/60">
+                            Total: <span className="font-bold text-[#0D47A1]">${(Number(price) * qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span className="text-xs ml-1">({qty} units)</span>
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleCustomOptionSelect(optNum)}
+                          className={`ml-auto px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                            isSelected
+                              ? 'bg-[#0D47A1] text-white cursor-default'
+                              : 'bg-[#E3F2FD] text-[#0D47A1] border border-[#BBDEFB] hover:bg-[#0D47A1] hover:text-white'
+                          }`}
+                        >
+                          {isSelected ? '✓ Selected' : 'Select'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {!quotation.custom_title_option1 && !quotation.custom_unit_price_option1 && !quotation.custom_title_option2 && !quotation.custom_unit_price_option2 && (
+                  <p className="text-xs text-center text-[#0D47A1]/40 py-4">No customized options configured yet</p>
+                )}
+              </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 divide-y divide-[#E3F2FD] dark:divide-blue-900/30">
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Unit Price</span>
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                  ${Number(quotation.customization_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
+
+            {/* Customization Files — shown after option is selected */}
+            {selectedCustomOption && (
+              <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] border-b border-[#BBDEFB]">
+                  <div>
+                    <h3 className="text-xs font-semibold text-[#0D47A1] uppercase tracking-wide">
+                      Customization Files
+                      {custFiles.length === 0 && <span className="ml-2 text-red-500 normal-case">*required before paying</span>}
+                    </h3>
+                    <p className="text-xs text-[#0D47A1]/50 mt-0.5">PDF, images, video, ZIP — max 50 MB</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingCust}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0D47A1] text-white text-xs font-medium hover:bg-[#1565C0] disabled:opacity-60 transition-colors"
+                  >
+                    {isUploadingCust ? (
+                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                      </svg>
+                    )}
+                    {isUploadingCust ? 'Uploading…' : 'Upload File'}
+                  </button>
+                  <input ref={fileInputRef} type="file" className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.zip"
+                    onChange={handleCustomizationUpload} />
+                </div>
+                <div className="p-3 bg-white space-y-2">
+                  {custFiles.length > 0 ? custFiles.map(file => (
+                    <div key={file.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-[#BBDEFB] bg-[#E3F2FD]/40">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <svg className="w-4 h-4 text-[#0D47A1] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                        </svg>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-[#0D47A1] truncate">{file.file_name}</p>
+                          <p className="text-xs text-[#0D47A1]/50">{file.file_size ? `${(file.file_size / 1024).toFixed(0)} KB` : ''}</p>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => handleDeleteCustFile(file)}
+                        className="flex-shrink-0 p-1 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  )) : (
+                    <div className="text-center py-4 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
+                      <p className="text-xs text-[#0D47A1]/40">No files uploaded yet — upload your specs before paying</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-xs font-medium text-[#0D47A1]/60 dark:text-blue-400/60 uppercase tracking-wide">Quantity</span>
-                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{parseFloat(quotation.quantity).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} units</span>
+            )}
+
+            {/* Price Summary for selected custom option */}
+            {selectedCustomOption && selectedCustomPrice && (
+              <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
+                <div className="px-4 py-3 bg-[#0D47A1]">
+                  <h3 className="text-xs font-semibold text-white uppercase tracking-wide">Price Summary — Custom Option {selectedCustomOption}</h3>
+                </div>
+                <div className="bg-white divide-y divide-[#E3F2FD]">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Unit Price</span>
+                    <span className="text-sm font-semibold text-gray-800">${Number(selectedCustomPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Quantity</span>
+                    <span className="text-sm font-semibold text-gray-800">{parseFloat(quotation.quantity || '1').toLocaleString()} units</span>
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD]">
+                    <span className="text-sm font-bold text-[#0D47A1] uppercase tracking-wide">Total</span>
+                    <span className="text-base font-bold text-[#0D47A1]">${(Number(selectedCustomPrice) * parseFloat(quotation.quantity || '1')).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between px-4 py-3 bg-[#E3F2FD] dark:bg-blue-900/20">
-                <span className="text-sm font-bold text-[#0D47A1] dark:text-blue-300 uppercase tracking-wide">Total</span>
-                <span className="text-base font-bold text-[#0D47A1] dark:text-blue-200">
-                  ${(Number(quotation.customization_price || 0) * parseFloat(quotation.quantity || '1')).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
+            )}
           </div>
         ) : (
           renderPriceOptionsSection()
         )}
 
         {/* Selected Option Details — fee integrated here */}
-        {quotation.selected_option && !(quotation.is_customizable && selectedVersion === 'customized') && (
+        {quotation.selected_option && selectedVersion !== 'customized' && (
           <div className="rounded-xl border border-[#BBDEFB] dark:border-blue-900/40 overflow-hidden">
             <div className="px-4 py-3 bg-[#0D47A1] dark:bg-blue-900/50">
               <h3 className="text-sm font-semibold text-white uppercase tracking-wide">Price Summary</h3>
@@ -1076,7 +1213,7 @@ const QuotationDetailsModal: React.FC<QuotationDetailsProps> = ({ isOpen, onClos
                 disabled={
                   isSaving || (
                     quotation.is_customizable && selectedVersion === 'customized'
-                      ? !quotation.customization_price  // customized: just needs a price set
+                      ? !selectedCustomOption  // customized: needs a custom option selected
                       : !selectedOption && !savedOption  // stock: needs a selected option
                   )
                 }

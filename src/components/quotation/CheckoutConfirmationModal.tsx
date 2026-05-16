@@ -3,6 +3,7 @@ import { Modal } from "@/components/ui/modal";
 import Image from "next/image";
 import { QuotationData as BaseQuotationData, PriceOption, CustomizationFile } from '@/types/quotation';
 import BankInformation, { BankType } from './BankInformation';
+import { sendEmailClient } from '@/lib/sendEmailClient';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useAuth } from '@/context/AuthContext';
@@ -63,6 +64,7 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
   const [isUploadingCust, setIsUploadingCust] = useState(false);
   const custFileRef = React.useRef<HTMLInputElement>(null);
   const [localSelectedVersion, setLocalSelectedVersion] = useState<string | null>(quotation.selected_version || null);
+  const [localCustomOption, setLocalCustomOption] = useState<number | null>(quotation.selected_customization_option ?? null);
   const isCustomized = localSelectedVersion === 'customized' && !!quotation.is_customizable;
   const [shippingLabel, setShippingLabel] = useState<string>(quotation.client_label || '');
   
@@ -270,11 +272,21 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
     }
   }, [selectedBank]);
 
+  const hasCustomOption2 = !!(quotation.custom_title_option2 || quotation.custom_unit_price_option2);
+  const effectiveCustomOption = isCustomized ? (localCustomOption ?? (!hasCustomOption2 ? 1 : null)) : null;
+
+  const getCustomizedUnitPrice = () => {
+    if (effectiveCustomOption === 1 && quotation.custom_unit_price_option1) return quotation.custom_unit_price_option1;
+    if (effectiveCustomOption === 2 && quotation.custom_unit_price_option2) return quotation.custom_unit_price_option2;
+    return quotation.customization_price ?? null;
+  };
+
   const getTotalToPay = () => {
     const quantity = parseNumeric(quotation.quantity);
-    // Customized version: unit_price × quantity (no service fee override)
-    if (isCustomized && quotation.customization_price) {
-      return parseNumeric(quotation.customization_price) * quantity;
+    // Customized version: selected custom option unit_price × quantity
+    if (isCustomized) {
+      const unitPrice = getCustomizedUnitPrice();
+      if (unitPrice) return parseNumeric(unitPrice) * quantity;
     }
     if (!selectedPriceOption) return 0;
     const optionNum = selectedPriceOption.id;
@@ -315,6 +327,23 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
       if (inserted) setCustFiles(prev => [inserted as CustomizationFile, ...prev]);
     } catch (err) { console.error('Upload error:', err); toast.error('Upload failed'); }
     finally { setIsUploadingCust(false); if (custFileRef.current) custFileRef.current.value = ''; }
+  };
+
+  const handleDeleteCustFile = async (file: CustomizationFile) => {
+    try {
+      // Extract storage path from URL
+      const urlParts = file.file_url.split('/customization-files/');
+      if (urlParts.length > 1) {
+        const storagePath = urlParts[1].split('?')[0];
+        await supabase.storage.from('customization-files').remove([storagePath]);
+      }
+      await supabase.from('customization_files').delete().eq('id', file.id);
+      setCustFiles(prev => prev.filter(f => f.id !== file.id));
+      toast.success('File removed');
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error('Failed to remove file');
+    }
   };
 
   if (!priceOptions.length && !quotation.is_customizable) {
@@ -370,6 +399,7 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
 
       setSelectedPriceOption(option);
       setLocalSelectedVersion('stock');
+      setLocalCustomOption(null);
       toast.success('Price option selected successfully');
     } catch (error) {
       console.error('Error updating selected option:', error);
@@ -379,18 +409,19 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
     }
   };
 
-  const handleCustomizedSelect = async () => {
+  const handleCustomizedSelect = async (optNum: number) => {
     if (isUpdatingOption || !quotationUuid) return;
     setIsUpdatingOption(true);
     try {
       const { error } = await supabase
         .from('quotations')
-        .update({ selected_version: 'customized', updated_at: new Date().toISOString() })
+        .update({ selected_version: 'customized', selected_customization_option: optNum, updated_at: new Date().toISOString() })
         .eq('id', quotationUuid);
       if (error) throw new Error(error.message);
       setLocalSelectedVersion('customized');
+      setLocalCustomOption(optNum);
       setSelectedPriceOption(null);
-      toast.success('Customized version selected');
+      toast.success(`Custom Option C${optNum} selected`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to select customized version');
     } finally {
@@ -480,6 +511,27 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
       updateQuotationStatus(quotationUuid)
         .catch(err => console.error('Failed to update quotation, but payment worked:', err));
 
+      // Send payment confirmation email
+      if (auth?.user?.email) {
+        sendEmailClient({
+          type: 'payment_created',
+          clientEmail: auth.user.email,
+          quotation: {
+            quotation_id: quotation.quotation_id,
+            product_name: quotation.product?.name || 'Product',
+            quantity: quotation.quantity,
+            status: quotation.status,
+            shipping_country: quotation.destination || '',
+          },
+          payment: {
+            reference_number: referenceNumber,
+            amount: amount,
+            method: selectedBank,
+            status: 'Pending',
+          },
+        });
+      }
+
       if (shippingLabel.trim()) {
         supabase.from('quotations')
           .update({ client_label: shippingLabel.trim() })
@@ -557,8 +609,9 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
     switch (bank) {
       case 'PAYONEER': return '/images/banks/payoneer.svg';
       case 'WISE': return '/images/banks/wise1.svg';
+      case 'AIRWALLEX': return '/images/banks/airwallex.png';
+      case 'WIRE': return '/images/banks/bank-wire.png';
       case 'BINANCE': return '/images/banks/Binance_Logo.svg.png';
-      default: return null;
     }
   };
 
@@ -615,8 +668,8 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
             ) : (
               <div className="space-y-2">
                 {priceOptions.map((option, index) => {
-                  const isSelected = !isCustomized && selectedPriceOption?.id === option.id;
-                  const isCurrentlySelected = !isCustomized && option.id === String(quotation.selected_option);
+                  const isSelected = localSelectedVersion !== 'customized' && selectedPriceOption?.id === option.id;
+                  const isCurrentlySelected = localSelectedVersion !== 'customized' && option.id === String(quotation.selected_option);
                   const unitPrice = (() => {
                     const val = option[`unit_price_option${option.id}`];
                     const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN;
@@ -680,52 +733,94 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                   );
                 })}
 
-                {/* Customized option card */}
-                {quotation.is_customizable && (
-                  <button
-                    onClick={handleCustomizedSelect}
-                    disabled={isUpdatingOption || !quotationUuid}
-                    className={`relative w-full p-3 border rounded-xl transition-all duration-200 text-left ${
-                      isCustomized
-                        ? 'border-[#0D47A1] bg-[#E3F2FD]'
-                        : 'border-dashed border-[#0D47A1]/40 hover:border-[#0D47A1] hover:bg-[#E3F2FD]/40 bg-white'
-                    } ${(isUpdatingOption || !quotationUuid) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-16 h-16 rounded-lg flex-shrink-0 flex items-center justify-center border ${isCustomized ? 'border-[#0D47A1] bg-[#0D47A1]/10' : 'border-dashed border-[#0D47A1]/40 bg-[#E3F2FD]/50'}`}>
-                        <svg className={`w-7 h-7 ${isCustomized ? 'text-[#0D47A1]' : 'text-[#0D47A1]/50'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className={`text-sm font-semibold ${isCustomized ? 'text-[#0D47A1]' : 'text-gray-800'}`}>
-                              Customized Version
-                            </h4>
-                            {isCustomized && (
-                              <span className="text-xs font-medium text-white bg-[#0D47A1] px-2 py-0.5 rounded-full">Selected</span>
+                {/* Customized option cards — one card per custom option (C1, C2) */}
+                {quotation.is_customizable && ([1, 2] as const).map((optNum) => {
+                  const custTitle = quotation[`custom_title_option${optNum}`];
+                  const custPrice = quotation[`custom_unit_price_option${optNum}`];
+                  if (!custTitle && !custPrice) return null;
+                  const custDelivery = quotation[`custom_delivery_option${optNum}`];
+                  const custWeight = quotation[`custom_unit_weight_option${optNum}`];
+                  const custImages = (quotation[`custom_images_option${optNum}`] as string[]) || [];
+                  const firstImage = custImages[0] || null;
+                  const isThisSelected = isCustomized && localCustomOption === optNum;
+                  return (
+                    <button
+                      key={`custom-${optNum}`}
+                      onClick={() => handleCustomizedSelect(optNum)}
+                      disabled={isUpdatingOption || !quotationUuid}
+                      className={`relative w-full p-3 border rounded-xl transition-all duration-200 text-left ${
+                        isThisSelected ? 'border-[#0D47A1] bg-[#E3F2FD]' : 'border-dashed border-[#0D47A1]/40 hover:border-[#0D47A1] hover:bg-[#E3F2FD]/40 bg-white'
+                      } ${(isUpdatingOption || !quotationUuid) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Image — zoomable */}
+                        <div
+                          className={`relative w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden border group ${firstImage ? 'cursor-zoom-in' : ''} ${isThisSelected ? 'border-[#0D47A1]' : 'border-dashed border-[#0D47A1]/40'}`}
+                          onClick={firstImage ? (e) => { e.stopPropagation(); setPreviewMedia({ url: firstImage, type: 'image' }); } : undefined}
+                        >
+                          {firstImage ? (
+                            <>
+                              <Image src={firstImage} alt={custTitle || `C${optNum}`} fill className="object-cover" />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                </svg>
+                              </div>
+                            </>
+                          ) : (
+                            <div className={`w-full h-full flex items-center justify-center ${isThisSelected ? 'bg-[#0D47A1]/10' : 'bg-[#E3F2FD]/50'}`}>
+                              <svg className={`w-7 h-7 ${isThisSelected ? 'text-[#0D47A1]' : 'text-[#0D47A1]/40'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold flex-shrink-0 ${isThisSelected ? 'bg-[#0D47A1] text-white' : 'bg-[#BBDEFB] text-[#0D47A1]'}`}>C{optNum}</span>
+                              <h4 className={`text-sm font-semibold ${isThisSelected ? 'text-[#0D47A1]' : 'text-gray-800'}`}>{custTitle || `Custom Option ${optNum}`}</h4>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-semibold border border-purple-200">
+                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Custom
+                              </span>
+                              {isThisSelected && <span className="text-[10px] font-medium text-white bg-[#0D47A1] px-2 py-0.5 rounded-full">Selected</span>}
+                            </div>
+                            {custPrice && (
+                              <div className="text-right flex-shrink-0">
+                                <div className={`text-base font-bold ${isThisSelected ? 'text-[#0D47A1]' : 'text-gray-700'}`}>
+                                  ${parseNumeric(custPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                                <div className="text-xs text-[#0D47A1]/50">per unit</div>
+                              </div>
                             )}
                           </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className={`text-base font-bold ${isCustomized ? 'text-[#0D47A1]' : 'text-gray-700'}`}>
-                              {quotation.customization_price
-                                ? `$${parseNumeric(quotation.customization_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                : 'N/A'}
-                            </div>
-                            <div className="text-xs text-[#0D47A1]/50">per unit</div>
+                          <div className="flex items-center gap-3 text-xs text-[#0D47A1]/60">
+                            {custDelivery && <span>Delivery: <span className="font-medium text-gray-700">{custDelivery}</span></span>}
+                            {custWeight && <span>Weight: <span className="font-medium text-gray-700">{custWeight}g</span></span>}
                           </div>
+                          {custImages.length > 1 && (
+                            <div className="flex gap-1.5 mt-2 flex-wrap">
+                              {custImages.slice(1).map((img, idx) => (
+                                <div key={idx} className="relative w-9 h-9 rounded border border-[#BBDEFB] overflow-hidden flex-shrink-0 cursor-zoom-in"
+                                  onClick={(e) => { e.stopPropagation(); setPreviewMedia({ url: img, type: 'image' }); }}>
+                                  <Image src={img} alt={`img ${idx + 2}`} fill className="object-cover" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <p className="text-xs text-[#0D47A1]/60">Upload your specs &amp; customization files to proceed</p>
                       </div>
-                    </div>
-                    {isUpdatingOption && isCustomized && (
-                      <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-xl">
-                        <div className="w-5 h-5 border-2 border-[#0D47A1] border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </button>
-                )}
+                      {isUpdatingOption && isThisSelected && (
+                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-xl">
+                          <div className="w-5 h-5 border-2 border-[#0D47A1] border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
             </div>
@@ -762,12 +857,31 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
               <div className="p-3 bg-white space-y-2">
                 {custFiles.length > 0 ? custFiles.map(file => (
                   <div key={file.id} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#BBDEFB] bg-[#E3F2FD]/40">
-                    <svg className="w-4 h-4 text-[#0D47A1] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    <svg className="w-4 h-4 text-[#0D47A1] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                    </svg>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-[#0D47A1] truncate">{file.file_name}</p>
                       {file.file_size && <p className="text-xs text-[#0D47A1]/50">{(file.file_size / 1024).toFixed(0)} KB</p>}
                     </div>
-                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+                    {/* Change button */}
+                    <label className="flex-shrink-0 cursor-pointer p-1.5 rounded-lg hover:bg-[#E3F2FD] text-[#0D47A1]/50 hover:text-[#0D47A1] transition-colors" title="Replace file">
+                      <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.zip" onChange={handleCustUpload} />
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                      </svg>
+                    </label>
+                    {/* Delete button */}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustFile(file)}
+                      className="flex-shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-[#0D47A1]/40 hover:text-red-500 transition-colors"
+                      title="Remove file"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
                   </div>
                 )) : (
                   <div className="text-center py-5 border border-dashed border-[#BBDEFB] rounded-lg bg-[#E3F2FD]/30">
@@ -819,19 +933,9 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
                           : 'border-[#BBDEFB] hover:border-[#0D47A1]/40 hover:bg-[#E3F2FD]/40 bg-white'
                       }`}
                     >
-                      {icon ? (
-                        <div className="relative w-9 h-9 mb-1.5">
-                          <Image src={icon} alt={label} fill className="object-contain" />
-                        </div>
-                      ) : (
-                        <div className={`w-9 h-9 mb-1.5 rounded-lg flex items-center justify-center text-xs font-bold ${selectedBank === bank ? 'bg-[#0D47A1] text-white' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}>
-                          {bank === 'AIRWALLEX' ? 'AW' : bank === 'WIRE' ? (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                          ) : bank.slice(0, 2)}
-                        </div>
-                      )}
+                      <div className="relative w-9 h-9 mb-1.5">
+                        {icon && <Image src={icon} alt={label} fill className="object-contain" />}
+                      </div>
                       <div className={`text-[11px] font-semibold text-center leading-tight ${selectedBank === bank ? 'text-[#0D47A1]' : 'text-gray-600'}`}>
                         {label}
                       </div>
@@ -866,15 +970,23 @@ const CheckoutConfirmationModal: React.FC<CheckoutConfirmationModalProps> = ({
             <div className="rounded-xl border border-[#BBDEFB] overflow-hidden">
               <div className="px-4 py-3 bg-[#0D47A1]">
                 <h3 className="text-xs font-semibold text-white uppercase tracking-wide">
-                  Price Summary {isCustomized && <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-[10px]">Customized</span>}
+                  Price Summary {isCustomized && (
+                    <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-[10px]">
+                      {effectiveCustomOption === 1 && quotation.custom_title_option1
+                        ? quotation.custom_title_option1
+                        : effectiveCustomOption === 2 && quotation.custom_title_option2
+                        ? quotation.custom_title_option2
+                        : 'Customized'}
+                    </span>
+                  )}
                 </h3>
               </div>
               <div className="bg-white divide-y divide-[#E3F2FD]">
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="text-xs font-medium text-[#0D47A1]/60 uppercase tracking-wide">Unit Price</span>
                   <span className="text-sm font-semibold text-gray-800">
-                    {isCustomized && quotation.customization_price
-                      ? `$${parseNumeric(quotation.customization_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    {isCustomized && getCustomizedUnitPrice()
+                      ? `$${parseNumeric(getCustomizedUnitPrice()!).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       : (() => {
                           if (!selectedPriceOption) return 'N/A';
                           const val = selectedPriceOption[`unit_price_option${selectedPriceOption.id}`];
