@@ -33,7 +33,7 @@ export default function SignInForm() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard-home`
+          redirectTo: 'https://dashboard.sourcinglaunch.com/auth/callback'
         }
       });
       

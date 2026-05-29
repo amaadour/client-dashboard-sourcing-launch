@@ -1,5 +1,5 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-const FROM = 'Sourcing Launch <noreply@sourcinglaunch.com>';
+const FROM = 'Sourcing Launch <onboarding@resend.dev>';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'ktkrimo553@gmail.com';
 const CLIENT_URL = 'https://dashboard.sourcinglaunch.com';
 const ADMIN_URL  = 'https://admin.sourcinglaunch.com';
@@ -10,6 +10,7 @@ export type EmailPayload =
   | { type: 'quotation_created'; quotation: QuotationEmailData; clientEmail: string }
   | { type: 'quotation_status';  quotation: QuotationEmailData; clientEmail: string }
   | { type: 'payment_created';   quotation: QuotationEmailData; payment: PaymentEmailData; clientEmail: string }
+  | { type: 'payment_status';    payment: PaymentEmailData; clientEmail: string }
   | { type: 'shipping_update';   shipment: ShipmentEmailData;   clientEmail: string };
 
 export interface QuotationEmailData {
@@ -256,7 +257,48 @@ function tplPaymentCreated(q: QuotationEmailData, p: PaymentEmailData): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TEMPLATE 4 — Shipping Update
+// TEMPLATE 4 — Payment Status Update
+// ─────────────────────────────────────────────────────────────────────────────
+function tplPaymentStatus(p: PaymentEmailData): string {
+  const isApproved = p.status === 'Approved';
+  const isRejected = p.status === 'Rejected';
+
+  const titleText = isApproved
+    ? 'Your payment has been approved.'
+    : isRejected
+    ? 'Your payment was not approved.'
+    : `Your payment status is now ${p.status}.`;
+
+  const intro = isApproved
+    ? `Great news — your payment of <strong>$${Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> has been verified and approved. Your order is now being processed.`
+    : isRejected
+    ? `Unfortunately, your payment of <strong>$${Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> could not be approved. Please contact us for assistance.`
+    : `Your payment status has been updated to <strong>${p.status}</strong>.`;
+
+  const alert = isApproved
+    ? alertBox('Order in progress', 'Your order is now being prepared. You will receive shipment updates soon.', '#F0FDF4', '#22C55E', '#166534')
+    : isRejected
+    ? alertBox('Action required', 'Please contact our support team to resolve this issue.', '#FFF7ED', '#F97316', '#9A3412')
+    : '';
+
+  const body = `
+    <p style="margin:0 0 20px;font-size:15px;color:#64748B;line-height:1.75;">${intro}</p>
+
+    ${infoCard('Payment Details',
+      infoRow('Reference', `<span style="font-family:ui-monospace,monospace;background:#F8FAFC;border:1px solid #E2E8F0;padding:2px 8px;border-radius:4px;font-weight:600;">${p.reference_number}</span>`) +
+      infoRow('Amount', `<strong style="color:#0D47A1;">$${Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>`) +
+      infoRow('Method', p.method) +
+      infoRow('Status', statusBadge(p.status))
+    )}
+
+    ${alert}
+    ${ctaBtn('View Payment', `${CLIENT_URL}/payment`)}
+  `;
+  return layout(titleText, `Your payment status is now ${p.status}.`, body);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEMPLATE 5 — Shipping Update
 // ─────────────────────────────────────────────────────────────────────────────
 function tplShippingUpdate(s: ShipmentEmailData): string {
   const messages: Record<string, string> = {
@@ -327,6 +369,9 @@ export async function sendEmail(payload: EmailPayload) {
       break;
     case 'payment_created':
       await send(payload.clientEmail, `Payment received — ${payload.payment.reference_number}`, tplPaymentCreated(payload.quotation, payload.payment));
+      break;
+    case 'payment_status':
+      await send(payload.clientEmail, `Payment ${payload.payment.status.toLowerCase()} — ${payload.payment.reference_number}`, tplPaymentStatus(payload.payment));
       break;
     case 'shipping_update':
       await send(payload.clientEmail, `Your order has been shipped — ${payload.shipment.quotation_id ?? payload.shipment.status}`, tplShippingUpdate(payload.shipment));
