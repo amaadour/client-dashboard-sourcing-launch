@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: 'RESEND_API_KEY is missing from .env' }, { status: 500 });
   }
 
-  // 2. Send directly with onboarding@resend.dev (always works on free plan)
+  // 2. Send from the verified sourcinglaunch.com domain
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -16,7 +16,7 @@ export async function GET() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Sourcing Launch <onboarding@resend.dev>',
+      from: 'Sourcing Launch <noreply@sourcinglaunch.com>',
       to: ['groupechannel@gmail.com'],
       subject: '✅ Test Email — Sourcing Launch',
       html: `

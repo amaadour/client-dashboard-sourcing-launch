@@ -1,5 +1,5 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY!;
-const FROM = 'Sourcing Launch <onboarding@resend.dev>';
+const FROM = 'Sourcing Launch <noreply@sourcinglaunch.com>';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'ktkrimo553@gmail.com';
 const CLIENT_URL = 'https://dashboard.sourcinglaunch.com';
 const ADMIN_URL  = 'https://admin.sourcinglaunch.com';
