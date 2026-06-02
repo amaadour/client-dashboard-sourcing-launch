@@ -33,6 +33,9 @@ const alwaysPublicPatterns = [
   /^\/_next\//,
   /^\/images\//,
   /^\/favicon\.ico$/,
+  // OAuth redirect lands here with the session token in the URL hash; the
+  // page resolves the session client-side and redirects onward itself.
+  /^\/auth\/callback$/,
 ];
 
 export async function middleware(req: NextRequest) {
